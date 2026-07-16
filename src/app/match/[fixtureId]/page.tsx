@@ -8,6 +8,7 @@ import { getFixture, getTimeline } from "@/lib/data";
 import { foldTimeline } from "@/lib/replay/timeline";
 import { PredictionPanel } from "@/components/PredictionPanel";
 import { VerifyButton } from "@/components/VerifyModal";
+import { LivePanel } from "@/components/LivePanel";
 
 export const revalidate = 300;
 
@@ -37,24 +38,22 @@ export default async function MatchPage({
         </Link>
       </div>
 
-      <Scoreboard
-        p1={fixture.p1}
-        p2={fixture.p2}
-        scoreP1={fixture.score?.p1 ?? folded?.score.p1 ?? 0}
-        scoreP2={fixture.score?.p2 ?? folded?.score.p2 ?? 0}
-        phase={
-          finished
-            ? (fixture.score?.note ?? "Full-time")
-            : `Kickoff ${new Date(fixture.startTime).toLocaleString("en-US", {
-                month: "short",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-                timeZone: "UTC",
-                hour12: false,
-              })} UTC`
-        }
-      />
+      {finished ? (
+        <Scoreboard
+          p1={fixture.p1}
+          p2={fixture.p2}
+          scoreP1={fixture.score?.p1 ?? folded?.score.p1 ?? 0}
+          scoreP2={fixture.score?.p2 ?? folded?.score.p2 ?? 0}
+          phase={fixture.score?.note ?? "Full-time"}
+        />
+      ) : (
+        <LivePanel
+          fixtureId={fixture.fixtureId}
+          p1={fixture.p1}
+          p2={fixture.p2}
+          kickoffIso={fixture.startTime.toISOString()}
+        />
+      )}
 
       <div className="flex flex-wrap items-center gap-3">
         {timeline && (

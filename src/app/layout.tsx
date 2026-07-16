@@ -66,7 +66,11 @@ export default function RootLayout({
           {children}
         </main>
         <footer className="border-t border-pitch-700/40 py-6 text-center text-sm text-pitch-400">
-          Rewind FC — powered by TxLINE on Solana · data anchored on-chain
+          Rewind FC — powered by{" "}
+          <Link href="/about" className="text-volt hover:underline">
+            TxLINE on Solana
+          </Link>{" "}
+          · data anchored on-chain
         </footer>
         </WalletProviders>
       </body>
