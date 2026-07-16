@@ -108,4 +108,46 @@ export function getStatValidation(
   );
 }
 
+export function getStatValidationV3(
+  fixtureId: string | number,
+  seq: number,
+  statKeys: string
+) {
+  return get<Record<string, unknown>>(
+    `/api/scores/stat-validation-v3?fixtureId=${fixtureId}&seq=${seq}&statKeys=${statKeys}`
+  );
+}
+
+export function getOddsValidation(messageId: number | string, ts: number) {
+  return get<Record<string, unknown>>(
+    `/api/odds/validation?messageId=${messageId}&ts=${ts}`
+  );
+}
+
+export function getFixtureValidation(
+  fixtureId: string | number,
+  timestamp?: number
+) {
+  const q = timestamp !== undefined ? `&timestamp=${timestamp}` : "";
+  return get<Record<string, unknown>>(
+    `/api/fixtures/validation?fixtureId=${fixtureId}${q}`
+  );
+}
+
+export function getFixtureBatchValidation(epochDay: number, hourOfDay: number) {
+  return get<Record<string, unknown>>(
+    `/api/fixtures/batch-validation?epochDay=${epochDay}&hourOfDay=${hourOfDay}`
+  );
+}
+
+export function getFixtureUpdatesWindow(epochDay: number, hourOfDay: number) {
+  return get<Record<string, unknown>[]>(
+    `/api/fixtures/updates/${epochDay}/${hourOfDay}`
+  );
+}
+
+export function getOddsUpdatesLive(fixtureId: string | number) {
+  return get<RawOddsEntry[]>(`/api/odds/updates/${fixtureId}`);
+}
+
 export const epochDayFromMs = (ms: number) => Math.floor(ms / 86_400_000);

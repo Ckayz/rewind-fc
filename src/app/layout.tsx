@@ -58,6 +58,12 @@ export default function RootLayout({
               >
                 Leaders
               </Link>
+              <Link
+                href="/proofs"
+                className="text-verify/80 hover:text-verify transition-colors"
+              >
+                Proofs
+              </Link>
               <WalletButton />
             </div>
           </nav>
