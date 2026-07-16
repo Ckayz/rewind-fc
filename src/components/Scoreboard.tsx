@@ -28,11 +28,11 @@ export function Scoreboard({
           </span>
         )}
       </div>
-      <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-        <span className="truncate text-right font-display text-3xl font-bold uppercase sm:text-4xl">
+      <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-4">
+        <span className="truncate text-right font-display text-xl font-bold uppercase sm:text-4xl">
           {p1}
         </span>
-        <span className="score-digits text-7xl leading-none sm:text-8xl">
+        <span className="score-digits text-5xl leading-none sm:text-8xl">
           <span className={scoreP1 > scoreP2 ? "text-volt volt-glow" : ""}>
             {scoreP1}
           </span>
@@ -41,7 +41,7 @@ export function Scoreboard({
             {scoreP2}
           </span>
         </span>
-        <span className="truncate text-left font-display text-3xl font-bold uppercase sm:text-4xl">
+        <span className="truncate text-left font-display text-xl font-bold uppercase sm:text-4xl">
           {p2}
         </span>
       </div>

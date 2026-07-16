@@ -27,6 +27,10 @@ export interface OddsPoint {
   goal?: string; // label when a goal happened at this minute
 }
 
+/** Decimal odds above this are market-resolution noise — clamp for readability. */
+const ODDS_CAP = 15;
+const clamp = (v?: number) => (v === undefined ? undefined : Math.min(v, ODDS_CAP));
+
 export function OddsChart({
   data,
   homeName,
@@ -38,14 +42,23 @@ export function OddsChart({
   awayName: string;
   cursorMin?: number; // replay cursor — only show points up to this minute
 }) {
-  const visible =
-    cursorMin === undefined ? data : data.filter((d) => d.tMin <= cursorMin);
+  const visible = (
+    cursorMin === undefined ? data : data.filter((d) => d.tMin <= cursorMin)
+  ).map((d) => ({
+    ...d,
+    home: clamp(d.home),
+    draw: clamp(d.draw),
+    away: clamp(d.away),
+  }));
   const goals = visible.filter((d) => d.goal);
 
   return (
     <div className="glass rounded-xl p-4">
-      <h3 className="mb-2 font-display text-lg font-semibold uppercase tracking-widest text-pitch-300">
+      <h3 className="mb-2 flex items-baseline justify-between font-display text-lg font-semibold uppercase tracking-widest text-pitch-300">
         Odds movement — StablePrice
+        <span className="text-[10px] normal-case tracking-normal text-pitch-500">
+          display capped at {ODDS_CAP}.00
+        </span>
       </h3>
       <div className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">

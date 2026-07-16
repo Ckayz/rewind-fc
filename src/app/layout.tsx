@@ -36,16 +36,16 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <WalletProviders>
         <header className="sticky top-0 z-50 glass border-x-0 border-t-0">
-          <nav className="mx-auto flex w-full max-w-6xl items-center gap-5 px-4 py-3">
+          <nav className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-3">
             <Link href="/" className="flex items-baseline gap-1.5">
-              <span className="score-digits text-2xl leading-none text-volt volt-glow">
+              <span className="score-digits text-xl leading-none text-volt volt-glow sm:text-2xl">
                 REWIND
               </span>
-              <span className="score-digits text-2xl leading-none text-pitch-50">
+              <span className="score-digits text-xl leading-none text-pitch-50 sm:text-2xl">
                 FC
               </span>
             </Link>
-            <div className="ml-auto flex items-center gap-4 font-display text-lg font-semibold uppercase tracking-wide text-pitch-300">
+            <div className="ml-auto flex items-center gap-3 font-display text-base font-semibold uppercase tracking-wide text-pitch-300 sm:gap-4 sm:text-lg">
               <Link href="/bracket" className="hover:text-volt transition-colors">
                 Bracket
               </Link>

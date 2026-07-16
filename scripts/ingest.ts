@@ -163,18 +163,22 @@ function compileScores(fx: RawFixture, records: ScoreRecord[]): Compiled | null 
       });
     }
 
-    // card detection via total-stat deltas (keys 3-6)
+    // goals + cards from total-stat deltas — the authoritative source.
+    // Raw `goal` actions triple-fire (announce / stats-bump / player enrichment)
+    // and include never-confirmed strays, so they are NOT used for scoring.
     if (r.Stats && Object.keys(r.Stats).length > 0) {
-      for (const [key, label, tm] of [
-        ["3", "Yellow card", "p1"], ["4", "Yellow card", "p2"],
-        ["5", "Red card", "p1"], ["6", "Red card", "p2"],
+      for (const [key, type, label, tm] of [
+        ["1", "goal", "GOAL", "p1"], ["2", "goal", "GOAL", "p2"],
+        ["3", "yellow", "Yellow card", "p1"], ["4", "yellow", "Yellow card", "p2"],
+        ["5", "red", "Red card", "p1"], ["6", "red", "Red card", "p2"],
+        ["7", "corner", "Corner", "p1"], ["8", "corner", "Corner", "p2"],
       ] as const) {
         const prev = lastStats[key] ?? 0;
         const cur = r.Stats[key] ?? prev;
-        if (cur > prev) {
+        for (let n = prev; n < cur; n++) {
           items.push({
             offsetMs: clockMs, kind: "score",
-            payload: { type: key === "5" || key === "6" ? "red" : "yellow", team: tm, text: `${label} — ${tm === "p1" ? fx.Participant1 : fx.Participant2}` },
+            payload: { type, team: tm, text: `${label} — ${tm === "p1" ? fx.Participant1 : fx.Participant2}` },
           });
         }
       }
@@ -185,12 +189,6 @@ function compileScores(fx: RawFixture, records: ScoreRecord[]): Compiled | null 
     const name = t === "p1" ? fx.Participant1 : t === "p2" ? fx.Participant2 : "";
 
     switch (r.Action) {
-      case "goal": {
-        const cancelled = (r.Data as { Cancelled?: boolean })?.Cancelled;
-        if (cancelled) break;
-        items.push({ offsetMs: clockMs, kind: "score", payload: { type: "goal", team: t, text: `GOAL — ${name || "goal"}` } });
-        break;
-      }
       case "shot": {
         const outcome = (r.Data as { Outcome?: string })?.Outcome;
         if (outcome === "OnTarget" || outcome === "Woodwork") {
@@ -198,11 +196,11 @@ function compileScores(fx: RawFixture, records: ScoreRecord[]): Compiled | null 
         }
         break;
       }
-      case "corner":
-        items.push({ offsetMs: clockMs, kind: "score", payload: { type: "corner", team: t, text: `Corner${name ? ` — ${name}` : ""}` } });
-        break;
       case "substitution":
-        items.push({ offsetMs: clockMs, kind: "score", payload: { type: "substitution", team: t, text: `Substitution${name ? ` — ${name}` : ""}` } });
+        // Confirmed=false is the announce; the real sub follows with Confirmed=true
+        if ((r as { Confirmed?: boolean }).Confirmed === true) {
+          items.push({ offsetMs: clockMs, kind: "score", payload: { type: "substitution", team: t, text: `Substitution${name ? ` — ${name}` : ""}` } });
+        }
         break;
       case "var": {
         const vtype = (r.Data as { Type?: string })?.Type;
