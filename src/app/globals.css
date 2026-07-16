@@ -1,26 +1,117 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Stadium-at-night palette */
+  --color-pitch-950: #070b08;
+  --color-pitch-900: #0a0f0b;
+  --color-pitch-850: #0e1510;
+  --color-pitch-800: #121a14;
+  --color-pitch-700: #1e2a20;
+  --color-pitch-600: #2c3d2f;
+  --color-pitch-400: #55684f;
+  --color-pitch-300: #7a8a7c;
+  --color-pitch-100: #cdd8cc;
+  --color-pitch-50: #e8f0e6;
+
+  --color-volt: #c6ff00;
+  --color-volt-dim: #9ac70a;
+  --color-live: #ff3b30;
+  --color-gold: #ffc940;
+  --color-verify: #14f195; /* solana green */
+
+  --font-display: var(--font-barlow), "Barlow Condensed", sans-serif;
+  --font-body: var(--font-archivo), "Archivo", sans-serif;
+
+  --animate-live-pulse: live-pulse 1.6s ease-in-out infinite;
+  --animate-rise: rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-tick: tick-flash 0.9s ease-out both;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.55);
+  }
+  50% {
+    opacity: 0.65;
+    box-shadow: 0 0 0 6px rgba(255, 59, 48, 0);
   }
 }
 
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tick-flash {
+  0% {
+    background-color: rgba(198, 255, 0, 0.28);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+:root {
+  color-scheme: dark;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-pitch-900);
+  color: var(--color-pitch-50);
+  font-family: var(--font-body);
+  /* faint floodlight from top + solana hint bottom-right */
+  background-image: radial-gradient(
+      1200px 500px at 50% -180px,
+      rgba(198, 255, 0, 0.07),
+      transparent 65%
+    ),
+    radial-gradient(
+      900px 420px at 85% 110%,
+      rgba(20, 241, 149, 0.04),
+      transparent 60%
+    );
+  background-attachment: fixed;
+}
+
+/* Score-bug numerals */
+.score-digits {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.volt-glow {
+  text-shadow: 0 0 18px rgba(198, 255, 0, 0.45), 0 0 2px rgba(198, 255, 0, 0.8);
+}
+
+/* Glass panel */
+.glass {
+  background: linear-gradient(
+    160deg,
+    rgba(18, 26, 20, 0.85),
+    rgba(10, 15, 11, 0.92)
+  );
+  border: 1px solid rgba(122, 138, 124, 0.16);
+  backdrop-filter: blur(14px);
+}
+
+/* Pitch line motif (hero backgrounds) */
+.pitch-lines {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='260' viewBox='0 0 400 260' fill='none' stroke='%237a8a7c' stroke-opacity='0.10'%3E%3Ccircle cx='200' cy='130' r='60'/%3E%3Cline x1='200' y1='0' x2='200' y2='260'/%3E%3Crect x='0' y='55' width='58' height='150'/%3E%3Crect x='342' y='55' width='58' height='150'/%3E%3C/svg%3E");
+  background-position: center;
+  background-size: cover;
+}
+
+::selection {
+  background: rgba(198, 255, 0, 0.85);
+  color: #0a0f0b;
 }
