@@ -7,6 +7,7 @@ import { useReplayClock } from "@/lib/replay/useReplayClock";
 import { Scoreboard } from "@/components/Scoreboard";
 import { EventFeed } from "@/components/EventFeed";
 import { OddsChart } from "@/components/OddsChart";
+import { PredictionPanel } from "@/components/PredictionPanel";
 
 const SPEEDS = [
   { label: "×30", value: 30 },
@@ -74,12 +75,23 @@ export function ReplayPlayer({ timeline }: { timeline: CompiledTimeline }) {
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[1.2fr_1fr]">
-        <OddsChart
-          data={folded.odds}
-          homeName={timeline.meta.p1}
-          awayName={timeline.meta.p2}
-        />
-        <div className="glass max-h-96 overflow-y-auto rounded-xl p-4">
+        <div className="flex flex-col gap-5">
+          {folded.odds.length > 0 && (
+            <OddsChart
+              data={folded.odds}
+              homeName={timeline.meta.p1}
+              awayName={timeline.meta.p2}
+            />
+          )}
+          <PredictionPanel
+            fixtureId={timeline.meta.fixtureId}
+            p1={timeline.meta.p1}
+            p2={timeline.meta.p2}
+            mode="replay"
+            virtualMs={clock.virtualMs}
+          />
+        </div>
+        <div className="glass max-h-[32rem] overflow-y-auto rounded-xl p-4">
           <h3 className="mb-2 font-display text-lg font-semibold uppercase tracking-widest text-pitch-300">
             Live feed
           </h3>

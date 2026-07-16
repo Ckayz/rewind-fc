@@ -1,10 +1,15 @@
 import Link from "next/link";
 import { FixtureCard } from "@/components/FixtureCard";
-import { SAMPLE_FIXTURES } from "@/data/sample-fixtures";
+import { listFixtures } from "@/lib/data";
 
-export default function Home() {
-  const upcoming = SAMPLE_FIXTURES.filter((f) => f.status === "scheduled");
-  const replays = SAMPLE_FIXTURES.filter((f) => f.status === "finished");
+export const revalidate = 60;
+
+export default async function Home() {
+  const all = await listFixtures();
+  const upcoming = all.filter((f) => f.status !== "finished");
+  const replays = all
+    .filter((f) => f.status === "finished" && f.hasTimeline)
+    .reverse();
 
   return (
     <div className="flex flex-col gap-12">

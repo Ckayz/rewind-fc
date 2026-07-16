@@ -1,8 +1,17 @@
 import Link from "next/link";
-import type { SampleFixture } from "@/data/sample-fixtures";
-import { STAGE_LABEL } from "@/data/sample-fixtures";
+import { STAGE_LABEL, type Stage } from "@/data/sample-fixtures";
 
-function kickoffLabel(iso: string) {
+export interface CardFixture {
+  fixtureId: string;
+  p1: string;
+  p2: string;
+  score?: { p1: number; p2: number; note?: string };
+  startTime: string | Date;
+  stage: Stage;
+  status: "finished" | "scheduled" | "live";
+}
+
+function kickoffLabel(iso: string | Date) {
   return new Date(iso).toLocaleString("en-US", {
     month: "short",
     day: "numeric",
@@ -13,7 +22,7 @@ function kickoffLabel(iso: string) {
   });
 }
 
-export function FixtureCard({ fixture }: { fixture: SampleFixture }) {
+export function FixtureCard({ fixture }: { fixture: CardFixture }) {
   const { p1, p2, score, status, stage } = fixture;
   const finished = status === "finished";
   const live = status === "live";

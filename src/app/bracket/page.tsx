@@ -1,16 +1,19 @@
 import Link from "next/link";
-import { SAMPLE_FIXTURES, type SampleFixture, type Stage } from "@/data/sample-fixtures";
+import { type Stage } from "@/data/sample-fixtures";
+import { listFixtures, type Fixture } from "@/lib/data";
 
 export const metadata = { title: "Bracket — Rewind FC" };
+export const revalidate = 60;
 
 const COLUMNS: { stage: Stage; title: string }[] = [
+  { stage: "r32", title: "Round of 32" },
   { stage: "r16", title: "Round of 16" },
   { stage: "qf", title: "Quarterfinals" },
   { stage: "sf", title: "Semifinals" },
   { stage: "final", title: "Final" },
 ];
 
-function BracketNode({ f }: { f: SampleFixture }) {
+function BracketNode({ f }: { f: Fixture }) {
   const finished = f.status === "finished";
   const p1Wins =
     finished && f.score
@@ -55,7 +58,8 @@ function BracketNode({ f }: { f: SampleFixture }) {
   );
 }
 
-export default function BracketPage() {
+export default async function BracketPage() {
+  const all = await listFixtures();
   return (
     <div className="flex flex-col gap-8 pt-10">
       <div>
@@ -70,10 +74,10 @@ export default function BracketPage() {
       <div className="overflow-x-auto pb-4">
         <div className="flex min-w-max items-stretch gap-8">
           {COLUMNS.map(({ stage, title }) => {
-            const fixtures = SAMPLE_FIXTURES.filter((f) => f.stage === stage);
+            const fixtures = all.filter((f) => f.stage === stage);
             const bronze =
               stage === "final"
-                ? SAMPLE_FIXTURES.find((f) => f.stage === "bronze")
+                ? all.find((f) => f.stage === "bronze")
                 : undefined;
             return (
               <div key={stage} className="flex flex-col">
