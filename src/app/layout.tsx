@@ -58,6 +58,9 @@ export default function RootLayout({
               >
                 Leaders
               </Link>
+              <Link href="/pulse" className="hover:text-volt transition-colors">
+                Pulse
+              </Link>
               <Link
                 href="/proofs"
                 className="text-verify/80 hover:text-verify transition-colors"

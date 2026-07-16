@@ -50,6 +50,22 @@ pnpm dev
 
 `pnpm ingest --missing` resumes, skipping fixtures already compiled.
 
+## TxLINE endpoint coverage — 19/19
+
+| Endpoint | Powers |
+|---|---|
+| `auth/guest/start` · `token/activate` | session + on-chain subscription |
+| `guest/purchase/quote` | live upgrade quote on `/about` |
+| `fixtures/snapshot?startEpochDay` | all 106 WC fixtures |
+| `fixtures/updates/{d}/{h}` · `fixtures/validation` · `fixtures/batch-validation` | Proof Room fixture proofs |
+| `odds/snapshot/{id}` · `odds/updates/{id}` · `odds/stream` | live market card + catch-up + SSE |
+| `odds/updates/{d}/{h}/{i}` | replay odds curves (ingest) |
+| `odds/validation` | Proof Room odds proof |
+| `scores/snapshot/{id}` · `scores/updates/{id}` · `scores/stream` | live state + catch-up + SSE |
+| `scores/updates/{d}/{h}/{i}` | **Matchday Pulse** (`/pulse`) |
+| `scores/historical/{id}` | **Time Machine** replays |
+| `scores/stat-validation` · `scores/stat-validation-v3` | verify button + Proof Room multiproof |
+
 ## Stat encodings used (TxLINE soccer feed)
 
 | Key | Meaning | | Prefix | Period |

@@ -1,4 +1,7 @@
+import { QuoteCard } from "@/components/QuoteCard";
+
 export const metadata = { title: "About — Rewind FC" };
+export const revalidate = 3600;
 
 const Section = ({
   title,
@@ -95,6 +98,7 @@ export default function AboutPage() {
             premium, contextual ad inventory during replays.
           </li>
         </ul>
+        <QuoteCard />
       </Section>
 
       <Section title="TxLINE API feedback (hackathon requirement)">
@@ -127,6 +131,52 @@ export default function AboutPage() {
             streaming.
           </li>
         </ul>
+      </Section>
+
+      <Section title="TxLINE endpoint coverage — 19/19">
+        <p>
+          Rewind FC consumes <strong>every endpoint</strong> in the TxLINE API:
+        </p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-pitch-700/40 uppercase tracking-widest text-pitch-400">
+                <th className="py-2 pr-3">Endpoint</th>
+                <th className="py-2">Powers</th>
+              </tr>
+            </thead>
+            <tbody className="font-mono text-[11px]">
+              {(
+                [
+                  ["auth/guest/start", "session bootstrap"],
+                  ["token/activate", "on-chain subscription → API token"],
+                  ["guest/purchase/quote", "live upgrade quote (above)"],
+                  ["fixtures/snapshot (+startEpochDay)", "all 106 WC fixtures"],
+                  ["fixtures/updates/{d}/{h}", "Proof Room fixture-hour feed"],
+                  ["fixtures/validation", "Proof Room fixture proof"],
+                  ["fixtures/batch-validation", "Proof Room whole-hour proof"],
+                  ["odds/snapshot/{id}", "live market card"],
+                  ["odds/updates/{id}", "live odds catch-up feed"],
+                  ["odds/updates/{d}/{h}/{i}", "replay odds curves (ingest)"],
+                  ["odds/stream", "live SSE pass-through"],
+                  ["odds/validation", "Proof Room odds proof"],
+                  ["scores/snapshot/{id}", "live score state"],
+                  ["scores/updates/{id}", "live event catch-up feed"],
+                  ["scores/updates/{d}/{h}/{i}", "Matchday Pulse"],
+                  ["scores/historical/{id}", "Time Machine replays (ingest)"],
+                  ["scores/stream", "live SSE pass-through"],
+                  ["scores/stat-validation", "match-page verify button"],
+                  ["scores/stat-validation-v3", "Proof Room multiproof"],
+                ] as const
+              ).map(([ep, use]) => (
+                <tr key={ep} className="border-b border-pitch-700/20">
+                  <td className="py-1.5 pr-3 text-verify">{ep}</td>
+                  <td className="py-1.5 font-sans text-pitch-100">{use}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Section>
 
       <Section title="Stack">
