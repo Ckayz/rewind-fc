@@ -8,6 +8,7 @@ import { Scoreboard } from "@/components/Scoreboard";
 import { EventFeed } from "@/components/EventFeed";
 import { OddsChart } from "@/components/OddsChart";
 import { PredictionPanel } from "@/components/PredictionPanel";
+import { LineupsPanel } from "@/components/LineupsPanel";
 
 const SPEEDS = [
   { label: "×30", value: 30 },
@@ -90,6 +91,13 @@ export function ReplayPlayer({ timeline }: { timeline: CompiledTimeline }) {
             mode="replay"
             virtualMs={clock.virtualMs}
           />
+          {timeline.meta.lineups && (
+            <LineupsPanel
+              lineups={timeline.meta.lineups}
+              p1={timeline.meta.p1}
+              p2={timeline.meta.p2}
+            />
+          )}
         </div>
         <div className="glass max-h-[32rem] overflow-y-auto rounded-xl p-4">
           <h3 className="mb-2 font-display text-lg font-semibold uppercase tracking-widest text-pitch-300">

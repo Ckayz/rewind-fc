@@ -123,10 +123,18 @@ export default function AboutPage() {
             essential but easy to miss.
           </li>
           <li>
+            <strong>Hidden gem:</strong> full lineups (names, shirt numbers,
+            starters) and per-player final stats ride inside the scores feed
+            (<code>Action: lineups</code>, <code>PlayerStats</code> on{" "}
+            <code>game_finalised</code>) — undocumented in the guides, found in
+            the OpenAPI schemas. They power our team sheets and named
+            goalscorers. Document this — it&apos;s a killer feature.
+          </li>
+          <li>
             <strong>Wishlist:</strong> a <code>/fixtures/results</code>{" "}
             endpoint with final scores (we reconstruct them from stat keys
-            1/2); lineups; longer historical retention (group-stage histories
-            had already expired mid-tournament); explicit rate-limit
+            1/2); longer historical retention (group-stage histories had
+            already expired mid-tournament); explicit rate-limit
             documentation; WebSocket alternative to SSE for browser-native
             streaming.
           </li>

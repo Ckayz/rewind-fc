@@ -34,6 +34,18 @@ export interface TimelineItem {
   payload: Record<string, unknown>;
 }
 
+export interface LineupSide {
+  team: string;
+  players: { id: number; name: string; num: string; starter: boolean }[];
+}
+
+export interface PlayerStatLine {
+  id: number;
+  name: string;
+  team: "p1" | "p2";
+  stats: Record<string, number>;
+}
+
 export interface CompiledTimeline {
   meta: {
     fixtureId: string;
@@ -41,6 +53,9 @@ export interface CompiledTimeline {
     p2: string;
     kickoffTs: number;
     durationMs: number;
+    finalScore?: { p1: number; p2: number; detail?: string };
+    lineups?: { p1: LineupSide; p2: LineupSide };
+    playerStats?: PlayerStatLine[];
   };
   items: TimelineItem[];
 }

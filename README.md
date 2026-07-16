@@ -9,6 +9,7 @@ Built solo in 48h for the **TxODDS × Solana World Cup Hackathon** (Consumer & F
 ## What it does
 
 - **🕰 Time Machine replay** — the full match log from `GET /api/scores/historical/{fixtureId}` (kickoff, goals, cards, VAR, penalties, `Clock` seconds) is merged with 5-minute-bucket odds history into one compiled timeline, then replayed client-side on a virtual clock at ×30/×60/×120 with scrubbing. The odds chart draws itself as the match unfolds.
+- **👥 Player layer** — starting lineups with shirt numbers, named goalscorers ("GOAL — Gordon (England)"), sub on/off names and per-player full-time stats, all extracted from the scores feed's `lineups` action and `PlayerStats` payloads (undocumented but present in the OpenAPI schemas — see `/about` feedback).
 - **⛓ Verify on Solana** — any match's stats are proven against TxLINE's on-chain daily Merkle roots: fetch proof from `/api/scores/stat-validation`, derive the `daily_scores_roots` PDA from the proof's own timestamp, read the root account on mainnet, link to the explorer.
 - **🎯 Wallet-signed predictions** — winner + hi-lo picks signed with `signMessage` (gasless). The leaderboard is tamper-evident: every entry carries its ed25519 signature.
 - **🔴 Live mode** — for in-play matches (bronze final July 18, final July 19) the app polls a CDN-collapsed proxy of TxLINE's **real-time tier (service level 12)**.

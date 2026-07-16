@@ -9,6 +9,7 @@ import { foldTimeline } from "@/lib/replay/timeline";
 import { PredictionPanel } from "@/components/PredictionPanel";
 import { VerifyButton } from "@/components/VerifyModal";
 import { LivePanel } from "@/components/LivePanel";
+import { LineupsPanel, PlayerStatsPanel } from "@/components/LineupsPanel";
 
 export const revalidate = 300;
 
@@ -98,6 +99,23 @@ export default async function MatchPage({
             </p>
           )}
         </div>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        {timeline?.meta.playerStats && (
+          <PlayerStatsPanel
+            playerStats={timeline.meta.playerStats}
+            p1={fixture.p1}
+            p2={fixture.p2}
+          />
+        )}
+        {timeline?.meta.lineups && (
+          <LineupsPanel
+            lineups={timeline.meta.lineups}
+            p1={fixture.p1}
+            p2={fixture.p2}
+          />
+        )}
       </div>
     </div>
   );
