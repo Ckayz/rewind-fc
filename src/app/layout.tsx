@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Barlow_Condensed, Archivo } from "next/font/google";
 import Link from "next/link";
+import { WalletProviders } from "@/components/WalletProviders";
+import { WalletButton } from "@/components/WalletButton";
 import "./globals.css";
 
 const barlow = Barlow_Condensed({
@@ -32,6 +34,7 @@ export default function RootLayout({
       className={`${barlow.variable} ${archivo.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <WalletProviders>
         <header className="sticky top-0 z-50 glass border-x-0 border-t-0">
           <nav className="mx-auto flex w-full max-w-6xl items-center gap-5 px-4 py-3">
             <Link href="/" className="flex items-baseline gap-1.5">
@@ -55,6 +58,7 @@ export default function RootLayout({
               >
                 Leaders
               </Link>
+              <WalletButton />
             </div>
           </nav>
         </header>
@@ -64,6 +68,7 @@ export default function RootLayout({
         <footer className="border-t border-pitch-700/40 py-6 text-center text-sm text-pitch-400">
           Rewind FC — powered by TxLINE on Solana · data anchored on-chain
         </footer>
+        </WalletProviders>
       </body>
     </html>
   );
