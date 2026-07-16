@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
+import { flag } from "@/lib/flags";
 
 interface Selection {
   pick?: "P1" | "X" | "P2";
@@ -111,9 +112,9 @@ export function PredictionPanel({
           <div className="grid grid-cols-3 gap-2">
             {(
               [
-                ["P1", p1],
+                ["P1", `${flag(p1)} ${p1}`],
                 ["X", "Draw"],
-                ["P2", p2],
+                ["P2", `${flag(p2)} ${p2}`],
               ] as const
             ).map(([code, label]) => (
               <button

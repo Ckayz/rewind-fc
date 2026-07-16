@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { type Stage } from "@/data/sample-fixtures";
 import { listFixtures, type Fixture } from "@/lib/data";
+import { flag } from "@/lib/flags";
 
 export const metadata = { title: "Bracket — Rewind FC" };
 export const revalidate = 60;
@@ -43,7 +44,10 @@ function BracketNode({ f }: { f: Fixture }) {
             finished && !wins ? "text-pitch-400" : "text-pitch-50"
           }`}
         >
-          <span className="truncate">{name}</span>
+          <span className="truncate">
+            <span className="mr-1">{flag(name)}</span>
+            {name}
+          </span>
           <span className={`score-digits pl-2 ${wins ? "text-volt" : ""}`}>
             {finished ? (score ?? "–") : ""}
           </span>

@@ -1,3 +1,5 @@
+import { flag } from "@/lib/flags";
+
 export function Scoreboard({
   p1,
   p2,
@@ -30,6 +32,7 @@ export function Scoreboard({
       </div>
       <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-4">
         <span className="truncate text-right font-display text-xl font-bold uppercase sm:text-4xl">
+          <span className="mr-2 text-2xl sm:text-4xl">{flag(p1)}</span>
           {p1}
         </span>
         <span className="score-digits text-5xl leading-none sm:text-8xl">
@@ -43,6 +46,7 @@ export function Scoreboard({
         </span>
         <span className="truncate text-left font-display text-xl font-bold uppercase sm:text-4xl">
           {p2}
+          <span className="ml-2 text-2xl sm:text-4xl">{flag(p2)}</span>
         </span>
       </div>
     </div>

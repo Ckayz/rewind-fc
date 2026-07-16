@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { STAGE_LABEL, type Stage } from "@/data/sample-fixtures";
+import { flag } from "@/lib/flags";
 
 export interface CardFixture {
   fixtureId: string;
@@ -46,6 +47,7 @@ export function FixtureCard({ fixture }: { fixture: CardFixture }) {
 
       <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
         <span className="truncate font-display text-xl font-semibold uppercase">
+          <span className="mr-1.5">{flag(p1)}</span>
           {p1}
         </span>
         <span className="score-digits text-3xl leading-none">
@@ -65,6 +67,7 @@ export function FixtureCard({ fixture }: { fixture: CardFixture }) {
         </span>
         <span className="truncate text-right font-display text-xl font-semibold uppercase">
           {p2}
+          <span className="ml-1.5">{flag(p2)}</span>
         </span>
       </div>
 

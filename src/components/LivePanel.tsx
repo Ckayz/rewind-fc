@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Scoreboard } from "@/components/Scoreboard";
+import { flag } from "@/lib/flags";
 
 interface LiveState {
   ok: boolean;
@@ -77,9 +78,9 @@ export function LivePanel({
         <div className="glass flex items-center justify-around rounded-xl px-4 py-3 text-center">
           {(
             [
-              [p1, state.odds.home],
+              [`${flag(p1)} ${p1}`, state.odds.home],
               ["Draw", state.odds.draw],
-              [p2, state.odds.away],
+              [`${flag(p2)} ${p2}`, state.odds.away],
             ] as const
           ).map(([label, value]) => (
             <div key={label}>
