@@ -31,6 +31,7 @@ export function LivePanel({
   kickoffIso: string;
 }) {
   const [state, setState] = useState<LiveState | null>(null);
+  const [streaming, setStreaming] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -44,10 +45,22 @@ export function LivePanel({
       }
     };
     void tick();
-    const id = setInterval(tick, 10_000);
+    // polling fallback stays on; SSE push makes refreshes instant
+    const id = setInterval(tick, 15_000);
+
+    // TxLINE SSE pass-through: any pushed event triggers an immediate refresh
+    const sources = ["scores", "odds"].map((feed) => {
+      const es = new EventSource(`/api/stream/${feed}?fixtureId=${fixtureId}`);
+      es.onopen = () => mounted && setStreaming(true);
+      es.onmessage = () => void tick();
+      es.onerror = () => mounted && setStreaming(false);
+      return es;
+    });
+
     return () => {
       mounted = false;
       clearInterval(id);
+      sources.forEach((es) => es.close());
     };
   }, [fixtureId]);
 
@@ -74,6 +87,14 @@ export function LivePanel({
         clockLabel={clock}
         live={!!inPlay}
       />
+      <div className="flex items-center justify-end gap-1.5 text-[10px] font-semibold uppercase tracking-widest">
+        <span
+          className={`h-1.5 w-1.5 rounded-full ${streaming ? "bg-verify animate-live-pulse" : "bg-pitch-600"}`}
+        />
+        <span className={streaming ? "text-verify" : "text-pitch-500"}>
+          {streaming ? "TxLINE stream connected" : "polling every 15s"}
+        </span>
+      </div>
       {state?.odds && (
         <div className="glass flex items-center justify-around rounded-xl px-4 py-3 text-center">
           {(

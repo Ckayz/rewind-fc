@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import { getOddsSnapshot, getScoresSnapshot } from "@/lib/txline";
+import {
+  getOddsSnapshot,
+  getOddsUpdatesLive,
+  getScoresSnapshot,
+  getScoresUpdatesLive,
+} from "@/lib/txline";
 
 const PHASE: Record<number, string> = {
   1: "Pre-match", 2: "First half", 3: "Half-time", 4: "Second half", 5: "Full-time",
@@ -20,12 +25,26 @@ export async function GET(
 ) {
   const { fixtureId } = await params;
   try {
-    const [scores, odds] = await Promise.allSettled([
+    const [scores, odds, scoreUpdates, oddsUpdates] = await Promise.allSettled([
       getScoresSnapshot(fixtureId) as Promise<ScoreRec[]>,
       getOddsSnapshot(fixtureId),
+      getScoresUpdatesLive(fixtureId),
+      getOddsUpdatesLive(fixtureId),
     ]);
 
-    const recs = scores.status === "fulfilled" ? scores.value : [];
+    // merge snapshot with current-window catch-up feed (dedupe by Seq)
+    const bySeq = new Map<number, ScoreRec>();
+    for (const r of scores.status === "fulfilled" ? scores.value : []) {
+      if (r.Seq !== undefined) bySeq.set(r.Seq, r);
+    }
+    for (const r of (scoreUpdates.status === "fulfilled"
+      ? (scoreUpdates.value as ScoreRec[])
+      : [])) {
+      if (r.Seq !== undefined) bySeq.set(r.Seq, r);
+    }
+    const recs = [...bySeq.values()];
+    const liveOddsCount =
+      oddsUpdates.status === "fulfilled" ? oddsUpdates.value.length : 0;
     const latest = [...recs].sort((a, b) => (b.Seq ?? 0) - (a.Seq ?? 0))[0];
     const stats = recs.reduce<Record<string, number>>(
       (acc, r) => ({ ...acc, ...(r.Stats ?? {}) }),
@@ -33,11 +52,18 @@ export async function GET(
     );
 
     let oddsOut: { home?: number; draw?: number; away?: number } | null = null;
-    if (odds.status === "fulfilled") {
-      const rec = (odds.value as {
+    {
+      interface OddsRec {
         SuperOddsType?: string; MarketPeriod?: string | null;
         PriceNames?: string[]; Prices?: number[]; Ts?: number;
-      }[])
+      }
+      const pool: OddsRec[] = [
+        ...(odds.status === "fulfilled" ? (odds.value as OddsRec[]) : []),
+        ...(oddsUpdates.status === "fulfilled"
+          ? (oddsUpdates.value as OddsRec[])
+          : []),
+      ];
+      const rec = pool
         .filter((o) => o.SuperOddsType === "1X2_PARTICIPANT_RESULT" && !o.MarketPeriod)
         .sort((a, b) => (b.Ts ?? 0) - (a.Ts ?? 0))[0];
       if (rec?.PriceNames && rec.Prices) {
@@ -72,6 +98,7 @@ export async function GET(
         clockSeconds: latest?.Clock?.Seconds ?? null,
         odds: oddsOut,
         events,
+        liveOddsUpdates: liveOddsCount,
         fetchedAt: Date.now(),
       },
       {

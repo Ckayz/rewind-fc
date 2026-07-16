@@ -146,8 +146,37 @@ export function getFixtureUpdatesWindow(epochDay: number, hourOfDay: number) {
   );
 }
 
-export function getOddsUpdatesLive(fixtureId: string | number) {
-  return get<RawOddsEntry[]>(`/api/odds/updates/${fixtureId}`);
+/**
+ * Current-window per-fixture update feeds. TxLINE serves these as SSE-formatted
+ * text on some deployments and JSON arrays on others — parse defensively.
+ */
+async function getUpdatesFlexible(path: string): Promise<Record<string, unknown>[]> {
+  const url = `${BASE}${path}`;
+  const res = await fetch(url, { headers: authHeaders(), cache: "no-store" });
+  if (!res.ok) throw new TxLineError(res.status, url, await res.text());
+  const text = await res.text();
+  if (!text.trim()) return [];
+  try {
+    const j = JSON.parse(text);
+    return Array.isArray(j) ? j : [j];
+  } catch {
+    const out: Record<string, unknown>[] = [];
+    for (const line of text.split("\n")) {
+      if (!line.startsWith("data:")) continue;
+      try {
+        out.push(JSON.parse(line.slice(5)));
+      } catch {
+        /* skip */
+      }
+    }
+    return out;
+  }
 }
+
+export const getScoresUpdatesLive = (fixtureId: string | number) =>
+  getUpdatesFlexible(`/api/scores/updates/${fixtureId}`);
+
+export const getOddsUpdatesLive = (fixtureId: string | number) =>
+  getUpdatesFlexible(`/api/odds/updates/${fixtureId}`);
 
 export const epochDayFromMs = (ms: number) => Math.floor(ms / 86_400_000);
