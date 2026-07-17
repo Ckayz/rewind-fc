@@ -3,6 +3,7 @@ import { Barlow_Condensed, Archivo } from "next/font/google";
 import Link from "next/link";
 import { WalletProviders } from "@/components/WalletProviders";
 import { WalletButton } from "@/components/WalletButton";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import "./globals.css";
 
 const barlow = Barlow_Condensed({
@@ -31,8 +32,17 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-theme="dark"
+      suppressHydrationWarning
       className={`${barlow.variable} ${archivo.variable} h-full antialiased`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem("rewindfc_theme")||(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark");document.documentElement.setAttribute("data-theme",t)}catch(e){}`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         <WalletProviders>
         <header className="sticky top-0 z-50 glass border-x-0 border-t-0">
@@ -45,7 +55,7 @@ export default function RootLayout({
                 FC
               </span>
             </Link>
-            <div className="ml-auto flex items-center gap-3 font-display text-base font-semibold uppercase tracking-wide text-pitch-300 sm:gap-4 sm:text-lg">
+            <div className="ml-auto flex items-center gap-3 text-sm font-semibold text-pitch-300 sm:gap-4">
               <Link
                 href="/demo"
                 className="text-live/80 hover:text-live transition-colors"
@@ -54,29 +64,29 @@ export default function RootLayout({
               </Link>
               <Link
                 href="/final"
-                className="text-gold hover:text-volt transition-colors"
+                className="text-gold hover:text-accent transition-colors"
               >
                 Final
               </Link>
-              <Link href="/bracket" className="hover:text-volt transition-colors">
+              <Link href="/bracket" className="hover:text-accent transition-colors">
                 Bracket
               </Link>
-              <Link href="/matches" className="hover:text-volt transition-colors">
+              <Link href="/matches" className="hover:text-accent transition-colors">
                 Matches
               </Link>
               <Link
                 href="/leaderboard"
-                className="hover:text-volt transition-colors"
+                className="hover:text-accent transition-colors"
               >
                 Leaders
               </Link>
-              <Link href="/pulse" className="hover:text-volt transition-colors">
+              <Link href="/pulse" className="hover:text-accent transition-colors">
                 Pulse
               </Link>
-              <Link href="/lab" className="hover:text-volt transition-colors">
+              <Link href="/lab" className="hover:text-accent transition-colors">
                 Lab
               </Link>
-              <Link href="/desk" className="hover:text-volt transition-colors">
+              <Link href="/desk" className="hover:text-accent transition-colors">
                 Desk
               </Link>
               <Link
@@ -85,6 +95,7 @@ export default function RootLayout({
               >
                 Proofs
               </Link>
+              <ThemeToggle />
               <WalletButton />
             </div>
           </nav>

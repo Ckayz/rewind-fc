@@ -171,7 +171,7 @@ export function TrackingLab() {
           {String(Math.floor(seconds % 60)).padStart(2, "0")}
         </span>
       </div>
-      <div className="relative bg-gradient-to-b from-pitch-800 to-pitch-850">
+      <div className="relative turf">
         <div
           className="absolute inset-0 opacity-[0.05]"
           style={{

@@ -329,7 +329,7 @@ export function PitchRadar({
         </AnimatePresence>
       </div>
 
-      <div className="relative aspect-[105/58] w-full bg-gradient-to-b from-pitch-800 to-pitch-850">
+      <div className="relative aspect-[105/58] w-full turf">
         <div
           className="absolute inset-0 opacity-[0.05]"
           style={{

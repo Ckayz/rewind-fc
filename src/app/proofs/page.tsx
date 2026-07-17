@@ -23,14 +23,8 @@ export default async function ProofsPage() {
           Proof room
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-pitch-300">
-          Every number in this app can be proven. TxODDS hashes each update into
-          a three-level Merkle hierarchy and publishes daily roots to Solana.
-          Pick a match, run the proofs, follow the root to the explorer —{" "}
-          <span className="text-verify">
-            score, odds and fixture data each check against their own on-chain
-            root
-          </span>
-          .
+          Pick a match, run the proofs — score, odds and fixture data each
+          verify against their own Merkle root on Solana.
         </p>
       </div>
       <ProofLab fixtures={fixtures} />

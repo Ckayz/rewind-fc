@@ -10,14 +10,19 @@ export default function LabPage() {
           Tracking lab
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-pitch-300">
-          This is <span className="text-volt">real optical tracking</span> —
-          every player and the ball, 25 times a second, from a professional
-          match (Metrica Sports open data, anonymized). It&apos;s what Rewind
-          FC renders the moment a club or league plugs a tracking feed into the
-          engine. World Cup 2026 tracking is licensed exclusively by FIFA, so
-          match pages use the honest zone radar from TxLINE data — the pipeline
-          below is ready for the day the coordinates flow.
+          Real optical tracking — every player and the ball, from a pro match
+          (Metrica open data).
         </p>
+        <details className="mt-1 max-w-2xl text-xs text-pitch-400">
+          <summary className="cursor-pointer font-semibold hover:text-accent">
+            ⓘ Why not WC 2026 tracking?
+          </summary>
+          <p className="mt-1">
+            FIFA licenses tournament tracking exclusively, so match pages use
+            the zone radar from TxLINE data. This engine renders full
+            coordinates the day a feed is plugged in.
+          </p>
+        </details>
       </div>
       <TrackingLab />
       <p className="text-xs text-pitch-500">

@@ -36,9 +36,8 @@ export default async function Home() {
           className="animate-rise mx-auto mt-5 max-w-xl text-pitch-300"
           style={{ animationDelay: "180ms" }}
         >
-          Replay all 104 matches as if they were happening now — goals, VAR
-          drama, and real odds swings tick by tick. Sign your predictions with
-          your wallet. Every data point verifiable on Solana.
+          Replay every match as if it were live — real odds, wallet-signed
+          picks, verifiable on Solana.
         </p>
         <div
           className="animate-rise mt-8 flex items-center justify-center gap-3"

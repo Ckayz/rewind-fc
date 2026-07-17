@@ -10,9 +10,8 @@ export default function PulsePage() {
           Matchday pulse
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-pitch-300">
-          The whole tournament, five minutes at a time. Pick any moment and see
-          every recorded event across every match in that exact slice — straight
-          from TxLINE&apos;s historical time-window feed.
+          The whole tournament, five minutes at a time — every event across
+          every match in any slice.
         </p>
       </div>
       <PulseExplorer />

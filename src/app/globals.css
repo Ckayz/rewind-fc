@@ -1,23 +1,37 @@
 @import "tailwindcss";
 
-@theme {
-  /* Stadium-at-night palette */
-  --color-pitch-950: #070b08;
-  --color-pitch-900: #0a0f0b;
-  --color-pitch-850: #0e1510;
-  --color-pitch-800: #121a14;
-  --color-pitch-700: #1e2a20;
-  --color-pitch-600: #2c3d2f;
-  --color-pitch-400: #55684f;
-  --color-pitch-300: #7a8a7c;
-  --color-pitch-100: #cdd8cc;
-  --color-pitch-50: #e8f0e6;
+/*
+ * Theme system: token NAMES stay stable (pitch-*, volt, …) — their VALUES
+ * switch with html[data-theme]. Dark = Polymarket-style navy graphite,
+ * light = clean white. Pitch/turf surfaces stay dark green in both themes.
+ */
 
-  --color-volt: #c6ff00;
+@theme {
+  /* dark defaults (overridden for light below) */
+  --color-pitch-950: #0a0f16;
+  --color-pitch-900: #0e1420; /* page */
+  --color-pitch-850: #151d2c; /* card */
+  --color-pitch-800: #1c2536; /* card raised */
+  --color-pitch-700: #2a3548; /* lines */
+  --color-pitch-600: #3a465c;
+  --color-pitch-400: #6b7688;
+  --color-pitch-300: #8a94a6; /* muted text */
+  --color-pitch-100: #c9d1de;
+  --color-pitch-50: #edf1f7; /* text */
+
+  --color-volt: #c6ff00; /* brand / live moments */
   --color-volt-dim: #9ac70a;
+  --color-accent: #2d6cff; /* Polymarket-style action blue */
   --color-live: #ff3b30;
   --color-gold: #ffc940;
-  --color-verify: #14f195; /* solana green */
+  --color-verify: #14f195;
+  --color-success: #27ae60;
+  --color-danger: #e64800;
+
+  /* always-dark turf for pitch visualizations */
+  --color-turf-1: #16210f;
+  --color-turf-2: #0f1809;
+  --color-turf-line: #7a8a7c;
 
   --font-display: var(--font-barlow), "Barlow Condensed", sans-serif;
   --font-body: var(--font-archivo), "Archivo", sans-serif;
@@ -25,6 +39,47 @@
   --animate-live-pulse: live-pulse 1.6s ease-in-out infinite;
   --animate-rise: rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-tick: tick-flash 0.9s ease-out both;
+}
+
+:root {
+  /* non-color knobs (dark defaults) */
+  --glass-bg: linear-gradient(160deg, rgba(21, 29, 44, 0.9), rgba(14, 20, 32, 0.94));
+  --glass-border: rgba(138, 148, 166, 0.16);
+  --glow-volt: 0 0 18px rgba(198, 255, 0, 0.45), 0 0 2px rgba(198, 255, 0, 0.8);
+  --chart-grid: #2a3548;
+  --chart-tick: #8a94a6;
+  --chart-tip-bg: #151d2c;
+  --page-glow-a: rgba(45, 108, 255, 0.06);
+  --page-glow-b: rgba(20, 241, 149, 0.04);
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --color-pitch-950: #e9edf3;
+  --color-pitch-900: #ffffff;
+  --color-pitch-850: #f7f8fa;
+  --color-pitch-800: #eef1f5;
+  --color-pitch-700: #e4e8ee;
+  --color-pitch-600: #cdd4de;
+  --color-pitch-400: #8a94a6;
+  --color-pitch-300: #667182;
+  --color-pitch-100: #2c3a4d;
+  --color-pitch-50: #1d2b39;
+
+  --color-volt: #7da300; /* volt legible on white */
+  --color-volt-dim: #5b8500;
+  --color-verify: #0d9e6e;
+  --color-gold: #b8860b;
+
+  --glass-bg: #ffffff;
+  --glass-border: #e4e8ee;
+  --glow-volt: none;
+  --chart-grid: #e4e8ee;
+  --chart-tick: #667182;
+  --chart-tip-bg: #ffffff;
+  --page-glow-a: rgba(45, 108, 255, 0.04);
+  --page-glow-b: rgba(39, 174, 96, 0.03);
+  color-scheme: light;
 }
 
 @keyframes live-pulse {
@@ -59,29 +114,20 @@
   }
 }
 
-:root {
-  color-scheme: dark;
-}
-
 body {
   background-color: var(--color-pitch-900);
   color: var(--color-pitch-50);
   font-family: var(--font-body);
-  /* faint floodlight from top + solana hint bottom-right */
   background-image: radial-gradient(
       1200px 500px at 50% -180px,
-      rgba(198, 255, 0, 0.07),
+      var(--page-glow-a),
       transparent 65%
     ),
-    radial-gradient(
-      900px 420px at 85% 110%,
-      rgba(20, 241, 149, 0.04),
-      transparent 60%
-    );
+    radial-gradient(900px 420px at 85% 110%, var(--page-glow-b), transparent 60%);
   background-attachment: fixed;
 }
 
-/* Score-bug numerals */
+/* Score-bug numerals — brand identity, both themes */
 .score-digits {
   font-family: var(--font-display);
   font-weight: 800;
@@ -90,28 +136,49 @@ body {
 }
 
 .volt-glow {
-  text-shadow: 0 0 18px rgba(198, 255, 0, 0.45), 0 0 2px rgba(198, 255, 0, 0.8);
+  text-shadow: var(--glow-volt);
 }
 
-/* Glass panel */
+/* Card ("glass" name kept for compatibility) */
 .glass {
-  background: linear-gradient(
-    160deg,
-    rgba(18, 26, 20, 0.85),
-    rgba(10, 15, 11, 0.92)
-  );
-  border: 1px solid rgba(122, 138, 124, 0.16);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   backdrop-filter: blur(14px);
 }
+:root[data-theme="light"] .glass {
+  backdrop-filter: none;
+  box-shadow: 0 1px 2px rgba(29, 43, 57, 0.06);
+}
 
-/* Pitch line motif (hero backgrounds) */
+/* Always-dark turf gradient for pitch visualizations */
+.turf {
+  background: linear-gradient(to bottom, var(--color-turf-1), var(--color-turf-2));
+}
+
+/* Pitch line motif */
 .pitch-lines {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='260' viewBox='0 0 400 260' fill='none' stroke='%237a8a7c' stroke-opacity='0.10'%3E%3Ccircle cx='200' cy='130' r='60'/%3E%3Cline x1='200' y1='0' x2='200' y2='260'/%3E%3Crect x='0' y='55' width='58' height='150'/%3E%3Crect x='342' y='55' width='58' height='150'/%3E%3C/svg%3E");
   background-position: center;
   background-size: cover;
 }
 
+/* themed Recharts chrome */
+.odds-chart .recharts-cartesian-grid line {
+  stroke: var(--chart-grid);
+}
+.odds-chart .recharts-cartesian-axis-tick text {
+  fill: var(--chart-tick);
+}
+.odds-chart .recharts-cartesian-axis line {
+  stroke: var(--chart-grid);
+}
+.odds-chart .recharts-default-tooltip {
+  background: var(--chart-tip-bg) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 8px;
+}
+
 ::selection {
-  background: rgba(198, 255, 0, 0.85);
-  color: #0a0f0b;
+  background: rgba(45, 108, 255, 0.8);
+  color: #fff;
 }

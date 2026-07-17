@@ -53,7 +53,7 @@ export function OddsChart({
   const goals = visible.filter((d) => d.goal);
 
   return (
-    <div className="glass rounded-xl p-4">
+    <div className="glass odds-chart rounded-xl p-4">
       <h3 className="mb-1 flex items-baseline justify-between font-display text-lg font-semibold uppercase tracking-widest text-pitch-300">
         Odds movement — StablePrice
         <span className="text-[10px] normal-case tracking-normal text-pitch-500">

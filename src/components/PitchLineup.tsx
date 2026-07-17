@@ -39,7 +39,7 @@ function Pitch({ side, country }: { side: LineupSide; country: string }) {
       </div>
 
       {/* half pitch, goal at bottom */}
-      <div className="relative aspect-[3/3.4] overflow-hidden rounded-xl border border-pitch-700/50 bg-gradient-to-b from-pitch-800 to-pitch-850">
+      <div className="relative aspect-[3/3.4] overflow-hidden rounded-xl border border-pitch-700/50 turf">
         {/* markings */}
         <div className="absolute inset-x-0 top-0 h-px bg-pitch-600/50" />
         <div className="absolute left-1/2 top-0 h-16 w-40 -translate-x-1/2 rounded-b-full border border-t-0 border-pitch-600/40" />
