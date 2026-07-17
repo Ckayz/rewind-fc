@@ -245,32 +245,58 @@ export function ReplayPlayer({
       </div>
       )}
 
-      <PitchRadar
-        zone={folded.zone}
-        lastEvent={
-          // show a ping for ~2.5 real seconds regardless of playback speed
-          folded.events[0] &&
-          clock.virtualMs - folded.events[0].offsetMs < 2_500 * clock.speed
-            ? folded.events[0]
-            : null
-        }
-        p1={timeline.meta.p1}
-        p2={timeline.meta.p2}
-        tMs={clock.virtualMs}
-        lineups={timeline.meta.lineups}
-        paused={!clock.playing}
-        live={demoLive}
-      />
-
-      <div className="grid gap-5 lg:grid-cols-[1.2fr_1fr]">
-        <div className="flex flex-col gap-5">
-          {folded.odds.length > 0 && (
-            <OddsChart
-              data={folded.odds}
-              homeName={timeline.meta.p1}
-              awayName={timeline.meta.p2}
+      {/* LEFT: match status & info · RIGHT: everything betting */}
+      <div className="grid gap-5 lg:grid-cols-[1.55fr_1fr]">
+        <div className="flex min-w-0 flex-col gap-5">
+          <PitchRadar
+            zone={folded.zone}
+            lastEvent={
+              // show a ping for ~2.5 real seconds regardless of playback speed
+              folded.events[0] &&
+              clock.virtualMs - folded.events[0].offsetMs < 2_500 * clock.speed
+                ? folded.events[0]
+                : null
+            }
+            p1={timeline.meta.p1}
+            p2={timeline.meta.p2}
+            tMs={clock.virtualMs}
+            lineups={timeline.meta.lineups}
+            paused={!clock.playing}
+            live={demoLive}
+          />
+          <div className="glass max-h-[26rem] overflow-y-auto rounded-xl p-4">
+            <h3 className="mb-2 font-display text-lg font-semibold uppercase tracking-widest text-pitch-300">
+              Live feed
+            </h3>
+            <AnimatePresence mode="wait">
+              {pundit && (
+                <motion.p
+                  key={pundit}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="mb-2 border-l-2 border-volt/50 pl-2 text-xs italic text-pitch-300"
+                >
+                  🎙 {pundit}
+                </motion.p>
+              )}
+            </AnimatePresence>
+            <EventFeed events={folded.events} />
+          </div>
+          {timeline.meta.lineups && (
+            <PitchLineup
+              lineups={timeline.meta.lineups}
+              p1={timeline.meta.p1}
+              p2={timeline.meta.p2}
             />
           )}
+        </div>
+
+        {/* betting rail */}
+        <div className="flex min-w-0 flex-col gap-5">
+          <h3 className="-mb-2 font-display text-sm font-semibold uppercase tracking-[0.25em] text-pitch-500">
+            💸 Betting desk
+          </h3>
           <ForecastPanel
             forecast={forecast}
             p1={timeline.meta.p1}
@@ -286,32 +312,13 @@ export function ReplayPlayer({
             mode="replay"
             virtualMs={clock.virtualMs}
           />
-          {timeline.meta.lineups && (
-            <PitchLineup
-              lineups={timeline.meta.lineups}
-              p1={timeline.meta.p1}
-              p2={timeline.meta.p2}
+          {folded.odds.length > 0 && (
+            <OddsChart
+              data={folded.odds}
+              homeName={timeline.meta.p1}
+              awayName={timeline.meta.p2}
             />
           )}
-        </div>
-        <div className="glass max-h-[32rem] overflow-y-auto rounded-xl p-4">
-          <h3 className="mb-2 font-display text-lg font-semibold uppercase tracking-widest text-pitch-300">
-            Live feed
-          </h3>
-          <AnimatePresence mode="wait">
-            {pundit && (
-              <motion.p
-                key={pundit}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="mb-2 border-l-2 border-volt/50 pl-2 text-xs italic text-pitch-300"
-              >
-                🎙 {pundit}
-              </motion.p>
-            )}
-          </AnimatePresence>
-          <EventFeed events={folded.events} />
         </div>
       </div>
     </div>

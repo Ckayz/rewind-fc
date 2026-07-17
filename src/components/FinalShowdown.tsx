@@ -94,30 +94,30 @@ export function FinalShowdownClient({
         </div>
       </FadeRise>
 
-      <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-        <LivePanel
-          fixtureId={fixtureId}
-          p1={p1}
-          p2={p2}
-          kickoffIso={kickoffIso}
-        />
-        <div className="flex flex-col gap-6">
-          <ShowdownPicks
-            fixtureId={fixtureId}
-            p1={p1}
-            p2={p2}
-            lineups={lineups}
-          />
-          {!finished && (
-            <PredictionPanel
+      <LivePanel
+        fixtureId={fixtureId}
+        p1={p1}
+        p2={p2}
+        kickoffIso={kickoffIso}
+        bettingExtra={
+          <>
+            <ShowdownPicks
               fixtureId={fixtureId}
               p1={p1}
               p2={p2}
-              mode="live"
+              lineups={lineups}
             />
-          )}
-        </div>
-      </div>
+            {!finished && (
+              <PredictionPanel
+                fixtureId={fixtureId}
+                p1={p1}
+                p2={p2}
+                mode="live"
+              />
+            )}
+          </>
+        }
+      />
     </div>
   );
 }

@@ -63,6 +63,14 @@ export default async function MatchPage({
           p1={fixture.p1}
           p2={fixture.p2}
           kickoffIso={fixture.startTime.toISOString()}
+          bettingExtra={
+            <PredictionPanel
+              fixtureId={fixture.fixtureId}
+              p1={fixture.p1}
+              p2={fixture.p2}
+              mode="live"
+            />
+          }
         />
       )}
 
@@ -77,15 +85,6 @@ export default async function MatchPage({
         )}
         {fixture.hasTimeline && <VerifyButton fixtureId={fixture.fixtureId} />}
       </div>
-
-      {!finished && (
-        <PredictionPanel
-          fixtureId={fixture.fixtureId}
-          p1={fixture.p1}
-          p2={fixture.p2}
-          mode="live"
-        />
-      )}
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
         {folded && folded.odds.length > 0 && (

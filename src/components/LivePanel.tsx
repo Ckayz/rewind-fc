@@ -32,11 +32,14 @@ export function LivePanel({
   p1,
   p2,
   kickoffIso,
+  bettingExtra,
 }: {
   fixtureId: string;
   p1: string;
   p2: string;
   kickoffIso: string;
+  /** rendered at the bottom of the betting rail (e.g. pick panels) */
+  bettingExtra?: React.ReactNode;
 }) {
   const [state, setState] = useState<LiveState | null>(null);
   const [streaming, setStreaming] = useState(false);
@@ -95,72 +98,90 @@ export function LivePanel({
         clockLabel={clock}
         live={!!inPlay}
       />
-      <PitchRadar
-        zone={state?.zone ?? null}
-        lastEvent={null}
-        p1={p1}
-        p2={p2}
-        tMs={state?.clockSeconds ? state.clockSeconds * 1000 : 0}
-        live
-        lineups={state?.lineups ?? undefined}
-      />
-      <div className="flex items-center justify-end gap-1.5 text-[10px] font-semibold uppercase tracking-widest">
-        <span
-          className={`h-1.5 w-1.5 rounded-full ${streaming ? "bg-verify animate-live-pulse" : "bg-pitch-600"}`}
-        />
-        <span className={streaming ? "text-verify" : "text-pitch-500"}>
-          {streaming ? "TxLINE stream connected" : "polling every 15s"}
-        </span>
-      </div>
-      {state?.odds && (
-        <div className="glass flex items-center justify-around rounded-xl px-4 py-3 text-center">
-          {(
-            [
-              [`${flag(p1)} ${p1}`, state.odds.home],
-              ["Draw", state.odds.draw],
-              [`${flag(p2)} ${p2}`, state.odds.away],
-            ] as const
-          ).map(([label, value]) => (
-            <div key={label}>
-              <div className="text-[11px] font-semibold uppercase tracking-widest text-pitch-400">
-                {label}
-              </div>
-              <div className="score-digits text-2xl text-volt">
-                {value?.toFixed(2) ?? "—"}
-              </div>
+      {/* LEFT: match status & info · RIGHT: everything betting */}
+      <div className="grid gap-4 lg:grid-cols-[1.55fr_1fr]">
+        <div className="flex min-w-0 flex-col gap-4">
+          <PitchRadar
+            zone={state?.zone ?? null}
+            lastEvent={null}
+            p1={p1}
+            p2={p2}
+            tMs={state?.clockSeconds ? state.clockSeconds * 1000 : 0}
+            live
+            lineups={state?.lineups ?? undefined}
+          />
+          <div className="flex items-center justify-end gap-1.5 text-[10px] font-semibold uppercase tracking-widest">
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${streaming ? "bg-verify animate-live-pulse" : "bg-pitch-600"}`}
+            />
+            <span className={streaming ? "text-verify" : "text-pitch-500"}>
+              {streaming ? "TxLINE stream connected" : "polling every 15s"}
+            </span>
+          </div>
+          {state && state.events.length > 0 && (
+            <div className="glass rounded-xl p-4">
+              <h3 className="mb-2 font-display text-lg font-semibold uppercase tracking-widest text-pitch-300">
+                Latest events
+              </h3>
+              <ul className="space-y-1.5 text-sm">
+                {state.events.map((e) => (
+                  <li key={e.seq} className="flex items-center gap-2">
+                    <span className="score-digits w-9 text-right text-pitch-300">
+                      {e.minute != null ? `${e.minute}'` : ""}
+                    </span>
+                    <span>{ICON[e.action ?? ""] ?? "•"}</span>
+                    <span className="capitalize text-pitch-100">
+                      {(e.action ?? "").replace("_", " ")}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </div>
-          ))}
-          <span className="text-[10px] uppercase tracking-widest text-pitch-500">
-            StablePrice · live
-          </span>
+          )}
         </div>
-      )}
-      <ForecastPanel
-        forecast={state?.forecast ?? null}
-        p1={p1}
-        p2={p2}
-        live
-      />
-      {state && state.events.length > 0 && (
-        <div className="glass rounded-xl p-4">
-          <h3 className="mb-2 font-display text-lg font-semibold uppercase tracking-widest text-pitch-300">
-            Latest events
+
+        {/* betting rail */}
+        <div className="flex min-w-0 flex-col gap-4">
+          <h3 className="-mb-1 font-display text-sm font-semibold uppercase tracking-[0.25em] text-pitch-500">
+            💸 Betting desk
           </h3>
-          <ul className="space-y-1.5 text-sm">
-            {state.events.map((e) => (
-              <li key={e.seq} className="flex items-center gap-2">
-                <span className="score-digits w-9 text-right text-pitch-300">
-                  {e.minute != null ? `${e.minute}'` : ""}
-                </span>
-                <span>{ICON[e.action ?? ""] ?? "•"}</span>
-                <span className="capitalize text-pitch-100">
-                  {(e.action ?? "").replace("_", " ")}
-                </span>
-              </li>
-            ))}
-          </ul>
+          {state?.odds && (
+            <div className="glass flex items-center justify-around rounded-xl px-4 py-3 text-center">
+              {(
+                [
+                  [`${flag(p1)} ${p1}`, state.odds.home],
+                  ["Draw", state.odds.draw],
+                  [`${flag(p2)} ${p2}`, state.odds.away],
+                ] as const
+              ).map(([label, value]) => (
+                <div key={label}>
+                  <div className="text-[11px] font-semibold uppercase tracking-widest text-pitch-400">
+                    {label}
+                  </div>
+                  <div className="score-digits text-2xl text-volt">
+                    {value?.toFixed(2) ?? "—"}
+                  </div>
+                </div>
+              ))}
+              <span className="text-[10px] uppercase tracking-widest text-pitch-500">
+                StablePrice · live
+              </span>
+            </div>
+          )}
+          <ForecastPanel
+            forecast={state?.forecast ?? null}
+            p1={p1}
+            p2={p2}
+            live
+            minuteLabel={
+              state?.clockSeconds != null
+                ? `${Math.floor(state.clockSeconds / 60)}'`
+                : undefined
+            }
+          />
+          {bettingExtra}
         </div>
-      )}
+      </div>
     </div>
   );
 }
