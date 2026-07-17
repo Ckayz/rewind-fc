@@ -1,9 +1,30 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { useRef, useState } from "react";
+import {
+  AnimatePresence,
+  motion,
+  useAnimationFrame,
+  useReducedMotion,
+} from "motion/react";
 import type { BallZone, MatchEvent } from "@/lib/replay/timeline";
 import type { LineupSide } from "@/db/schema";
 import { flag } from "@/lib/flags";
+
+/** deterministic per-player phase from id — no Math.random, SSR-safe */
+const phase = (id: number, k: number) => ((id * 2654435761) % (628 * k)) / 100;
+
+/** continuous wander offset around an anchor, amplitude by row */
+function wander(id: number, wt: number, amp: number): { dx: number; dy: number } {
+  return {
+    dx:
+      Math.sin(wt / 3100 + phase(id, 1)) * amp +
+      Math.sin(wt / 1300 + phase(id, 2)) * amp * 0.4,
+    dy:
+      Math.cos(wt / 2700 + phase(id, 3)) * amp * 1.4 +
+      Math.sin(wt / 1100 + phase(id, 4)) * amp * 0.5,
+  };
+}
 
 /** Formation x-anchors per row (percent of pitch length), p1 left→right. */
 const ROW_X = [7, 19, 33, 44]; // GK, DEF, MID, FWD
@@ -14,11 +35,13 @@ function PlayerDots({
   mirror,
   ballX,
   color,
+  wt,
 }: {
   side: LineupSide;
   mirror: boolean; // p2 → mirrored to the right half
   ballX: number;
   color: string;
+  wt: number; // continuous wander clock (real ms)
 }) {
   const reduced = useReducedMotion();
   const starters = side.players.filter((p) => p.starter);
@@ -28,23 +51,21 @@ function PlayerDots({
   const teamCenter = mirror ? 75 : 25;
   // whole block leans toward the ball a touch — schematic, alive, honest
   const lean = Math.max(-5, Math.min(5, (ballX - teamCenter) * 0.12));
+  // rows jog with different intensity: GK barely, forwards most
+  const AMP = [0.5, 1.4, 2.2, 2.8];
 
   return (
     <>
       {rows.map((row, ri) =>
         row.map((p, pi) => {
           const baseX = mirror ? 100 - ROW_X[ri] : ROW_X[ri];
-          const x = baseX + lean;
-          const y = ((pi + 1) / (row.length + 1)) * 88 + 6;
+          const w = reduced ? { dx: 0, dy: 0 } : wander(p.id, wt, AMP[ri]);
+          const x = baseX + lean + w.dx;
+          const y = ((pi + 1) / (row.length + 1)) * 88 + 6 + w.dy;
           return (
-            <motion.div
+            <div
               key={p.id}
-              animate={{ left: `${x}%`, top: `${y}%` }}
-              transition={
-                reduced
-                  ? { duration: 0 }
-                  : { type: "spring", stiffness: 26, damping: 15 }
-              }
+              style={{ left: `${x}%`, top: `${y}%` }}
               className="group absolute z-[5] -translate-x-1/2 -translate-y-1/2"
               title={p.name}
             >
@@ -63,7 +84,7 @@ function PlayerDots({
               >
                 {p.name}
               </span>
-            </motion.div>
+            </div>
           );
         })
       )}
@@ -86,12 +107,15 @@ const ZONE_COPY: Record<BallZone["z"], string> = {
   box: "danger in the box!",
 };
 
-function ballPos(zone: BallZone | null, tMs: number): { x: number; y: number } {
+function ballPos(zone: BallZone | null, wt: number): { x: number; y: number } {
   if (!zone) return { x: 50, y: 50 };
   const raw = ZONE_X[zone.z];
-  const x = zone.team === "p1" ? raw : 100 - raw;
-  // deterministic life: slow figure-eight wobble keyed on time
-  const y = 50 + Math.sin(tMs / 2600) * 16 + Math.sin(tMs / 900) * 5;
+  // continuous life: the ball works the channel, drifting around its zone
+  const x =
+    (zone.team === "p1" ? raw : 100 - raw) +
+    Math.sin(wt / 1900) * 4 +
+    Math.sin(wt / 700) * 1.5;
+  const y = 50 + Math.sin(wt / 2600) * 18 + Math.sin(wt / 830) * 6;
   return { x, y };
 }
 
@@ -137,9 +161,18 @@ export function PitchRadar({
   lineups?: { p1: LineupSide; p2: LineupSide };
 }) {
   const reduced = useReducedMotion();
-  const pos = ballPos(zone, tMs);
+  // internal wander clock — keeps everything moving even between data ticks
+  const [wt, setWt] = useState(0);
+  const wtRef = useRef(0);
+  useAnimationFrame((_, delta) => {
+    if (reduced) return;
+    wtRef.current += delta;
+    setWt(wtRef.current);
+  });
+  const pos = ballPos(zone, reduced ? 0 : wt);
   const ping = eventPing(lastEvent, zone);
   const possessing = zone ? (zone.team === "p1" ? p1 : p2) : null;
+  void tMs; // zone/event timing handled by parents; motion runs on wt
 
   return (
     <div className="glass overflow-hidden rounded-xl">
@@ -218,12 +251,14 @@ export function PitchRadar({
               mirror={false}
               ballX={pos.x}
               color="#c6ff00"
+              wt={wt}
             />
             <PlayerDots
               side={lineups.p2}
               mirror={true}
               ballX={pos.x}
               color="#E0703F"
+              wt={wt}
             />
           </>
         )}
