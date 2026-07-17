@@ -178,6 +178,26 @@ export function LivePanel({
                 ? `${Math.floor(state.clockSeconds / 60)}'`
                 : undefined
             }
+            windowKey={
+              state?.clockSeconds != null
+                ? Math.floor(state.clockSeconds / 300)
+                : undefined
+            }
+            windowLabel={
+              state?.clockSeconds != null
+                ? `${Math.floor(state.clockSeconds / 300) * 5}'–${Math.floor(state.clockSeconds / 300) * 5 + 5}'`
+                : undefined
+            }
+            windowProgress={
+              state?.clockSeconds != null
+                ? (state.clockSeconds % 300) / 300
+                : undefined
+            }
+            windowLeftMs={
+              state?.clockSeconds != null
+                ? (300 - (state.clockSeconds % 300)) * 1000
+                : undefined
+            }
           />
           {bettingExtra}
         </div>

@@ -70,7 +70,7 @@ export function FinalShowdownClient({
     <div className="flex flex-col gap-6 pt-10 pb-10">
       {finished && <Confetti pieces={60} />}
       <FadeRise>
-        <div className="pitch-lines relative -mx-4 overflow-hidden px-4 py-10 text-center">
+        <div className="pitch-lines relative -mx-5 sm:-mx-8 overflow-hidden px-5 sm:px-8 py-10 text-center">
           <p className="font-display text-lg font-semibold uppercase tracking-[0.3em] text-gold">
             World Cup Final · MetLife Stadium
           </p>

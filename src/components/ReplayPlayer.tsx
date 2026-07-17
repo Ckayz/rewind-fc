@@ -48,12 +48,18 @@ export function ReplayPlayer({
   const minute = Math.floor(clock.virtualMs / 60_000);
   const second = Math.floor((clock.virtualMs % 60_000) / 1000);
 
-  // rolling "next 5 minutes" forecast, recomputed every 15 virtual seconds
-  const forecastTick = Math.floor(clock.virtualMs / 15_000);
+  // discrete 5-minute prediction windows aligned to the match clock:
+  // forecast computed once at each boundary, held for the window
+  const WINDOW_MS = 5 * 60_000;
+  const windowIdx = Math.floor(clock.virtualMs / WINDOW_MS);
   const forecast: Forecast | null = useMemo(() => {
-    if (clock.virtualMs < 60_000) return null;
-    return computeForecast(windowStats(timeline.items, clock.virtualMs));
-  }, [timeline.items, forecastTick]); // eslint-disable-line react-hooks/exhaustive-deps
+    const boundary = windowIdx * WINDOW_MS;
+    if (boundary < 60_000) return null;
+    return computeForecast(windowStats(timeline.items, boundary));
+  }, [timeline.items, windowIdx]); // eslint-disable-line react-hooks/exhaustive-deps
+  const windowProgress = (clock.virtualMs % WINDOW_MS) / WINDOW_MS;
+  const windowLabel = `${windowIdx * 5}'–${windowIdx * 5 + 5}'`;
+  const windowLeftMs = WINDOW_MS - (clock.virtualMs % WINDOW_MS);
   const forecastLog = useRef<{ t: number; f: Forecast }[]>([]);
   useEffect(() => {
     if (forecast) {
@@ -304,6 +310,10 @@ export function ReplayPlayer({
             called={called}
             live={demoLive}
             minuteLabel={`${minute}'`}
+            windowLabel={windowLabel}
+            windowProgress={windowProgress}
+            windowLeftMs={windowLeftMs}
+            windowKey={windowIdx}
           />
           <PredictionPanel
             fixtureId={timeline.meta.fixtureId}

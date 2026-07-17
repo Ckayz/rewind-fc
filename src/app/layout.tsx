@@ -36,7 +36,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <WalletProviders>
         <header className="sticky top-0 z-50 glass border-x-0 border-t-0">
-          <nav className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-3">
+          <nav className="mx-auto flex w-full max-w-[1920px] items-center gap-3 px-5 py-3 sm:px-8">
             <Link href="/" className="flex items-baseline gap-1.5">
               <span className="score-digits text-xl leading-none text-volt volt-glow sm:text-2xl">
                 REWIND
@@ -86,7 +86,7 @@ export default function RootLayout({
             </div>
           </nav>
         </header>
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-24">
+        <main className="mx-auto w-full max-w-[1920px] flex-1 px-5 pb-24 sm:px-8">
           {children}
         </main>
         <footer className="border-t border-pitch-700/40 py-6 text-center text-sm text-pitch-400">

@@ -16,7 +16,7 @@ export default async function Home() {
   return (
     <div className="flex flex-col gap-12">
       {/* Hero */}
-      <section className="pitch-lines relative -mx-4 overflow-hidden px-4 pb-14 pt-16 text-center">
+      <section className="pitch-lines relative -mx-5 sm:-mx-8 overflow-hidden px-5 sm:px-8 pb-14 pt-16 text-center">
         <HeroCanvas />
         <p
           className="animate-rise font-display text-lg font-semibold uppercase tracking-[0.3em] text-volt"

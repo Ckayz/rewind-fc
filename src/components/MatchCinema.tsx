@@ -25,16 +25,30 @@ export function MatchCinema({
       </h3>
 
       {finished && videoId ? (
-        <div className="overflow-hidden rounded-lg" style={{ aspectRatio: "16/9" }}>
-          <iframe
-            src={`https://www.youtube-nocookie.com/embed/${videoId}`}
-            title={`${p1} v ${p2} — official highlights`}
-            className="h-full w-full"
+        // FIFA disables third-party embedding — deep-link with official thumbnail
+        <a
+          href={`https://www.youtube.com/watch?v=${videoId}`}
+          target="_blank"
+          rel="noreferrer"
+          className="group relative block overflow-hidden rounded-lg"
+          style={{ aspectRatio: "16/9" }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
+            alt={`${p1} v ${p2} — official highlights`}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
             loading="lazy"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
           />
-        </div>
+          <span className="absolute inset-0 flex items-center justify-center bg-pitch-950/40 transition-colors group-hover:bg-pitch-950/20">
+            <span className="rounded-xl bg-volt px-6 py-3 font-display text-lg font-bold uppercase text-pitch-950">
+              ▶ Watch official highlights ↗
+            </span>
+          </span>
+          <span className="absolute bottom-2 right-3 text-[10px] font-semibold uppercase tracking-widest text-pitch-100/80">
+            FIFA · YouTube
+          </span>
+        </a>
       ) : finished ? (
         <a
           href={searchUrl}

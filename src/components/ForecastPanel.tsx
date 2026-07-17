@@ -42,6 +42,10 @@ export function ForecastPanel({
   live,
   called,
   minuteLabel,
+  windowLabel,
+  windowProgress,
+  windowLeftMs,
+  windowKey,
 }: {
   forecast: Forecast | null;
   p1: string;
@@ -49,9 +53,26 @@ export function ForecastPanel({
   live?: boolean;
   called?: { team: string; pct: number } | null;
   minuteLabel?: string;
+  windowLabel?: string; // e.g. "80'–85'"
+  windowProgress?: number; // 0..1 through the current window
+  windowLeftMs?: number; // match-time remaining in window
+  windowKey?: number; // changes each window → pulse
 }) {
+  const leftLabel =
+    windowLeftMs !== undefined
+      ? `${Math.floor(windowLeftMs / 60_000)}:${String(
+          Math.floor((windowLeftMs % 60_000) / 1000)
+        ).padStart(2, "0")}`
+      : null;
+
   return (
-    <div className="glass rounded-xl p-4">
+    <motion.div
+      key={windowKey}
+      initial={windowKey !== undefined ? { scale: 0.985, opacity: 0.7 } : false}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ duration: 0.4 }}
+      className="glass rounded-xl p-4"
+    >
       <h3 className="mb-1 flex items-center justify-between font-display text-lg font-semibold uppercase tracking-widest text-pitch-300">
         ⚡ Next 5 minutes
         {minuteLabel && (
@@ -60,9 +81,32 @@ export function ForecastPanel({
           </span>
         )}
       </h3>
-      <p className="mb-3 text-[10px] uppercase tracking-widest text-pitch-500">
+      <p className="mb-2 text-[10px] uppercase tracking-widest text-pitch-500">
         Who scores next? · momentum model on live TxLINE data
       </p>
+
+      {/* prediction-window countdown */}
+      {windowProgress !== undefined && forecast && (
+        <div className="mb-3">
+          <div className="mb-1 flex items-baseline justify-between text-[10px] font-semibold uppercase tracking-widest">
+            <span className="text-pitch-400">
+              prediction window {windowLabel}
+            </span>
+            <span className="score-digits text-sm text-volt">
+              {leftLabel} <span className="text-pitch-500">to next call</span>
+            </span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-pitch-800">
+            <div
+              className="h-full rounded-full bg-volt transition-[width] duration-300 ease-linear"
+              style={{
+                width: `${(1 - windowProgress) * 100}%`,
+                boxShadow: "0 0 8px rgba(198,255,0,0.5)",
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {!forecast ? (
         <p className="py-4 text-center text-xs text-pitch-400">
@@ -129,6 +173,6 @@ export function ForecastPanel({
         Transparent heuristic on zone pressure, shots and corners — for fun, not
         financial advice.
       </p>
-    </div>
+    </motion.div>
   );
 }
