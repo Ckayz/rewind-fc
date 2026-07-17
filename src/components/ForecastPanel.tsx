@@ -85,18 +85,21 @@ export function ForecastPanel({
         Who scores next? · momentum model on live TxLINE data
       </p>
 
-      {/* prediction-window countdown */}
+      {/* prediction-window countdown — a full 5:00 that drains each window */}
       {windowProgress !== undefined && forecast && (
-        <div className="mb-3">
-          <div className="mb-1 flex items-baseline justify-between text-[10px] font-semibold uppercase tracking-widest">
-            <span className="text-pitch-400">
-              prediction window {windowLabel}
+        <div className="mb-3 rounded-lg border border-pitch-700/50 bg-pitch-900/50 px-3 py-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-pitch-400">
+              window {windowLabel}
             </span>
-            <span className="score-digits text-sm text-volt">
-              {leftLabel} <span className="text-pitch-500">to next call</span>
+            <span className="score-digits text-2xl leading-none text-volt volt-glow">
+              {leftLabel}
+            </span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-pitch-500">
+              next call
             </span>
           </div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-pitch-800">
+          <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-pitch-800">
             <div
               className="h-full rounded-full bg-volt transition-[width] duration-300 ease-linear"
               style={{
@@ -169,10 +172,19 @@ export function ForecastPanel({
         )}
       </AnimatePresence>
 
-      <p className="mt-3 text-[10px] text-pitch-500">
-        Transparent heuristic on zone pressure, shots and corners — for fun, not
-        financial advice.
-      </p>
+      <details className="mt-3">
+        <summary className="cursor-pointer text-[10px] font-semibold uppercase tracking-widest text-pitch-500 hover:text-volt">
+          ⓘ How this prediction works
+        </summary>
+        <p className="mt-1.5 text-[11px] leading-relaxed text-pitch-400">
+          At each 5-minute boundary the model reads the previous 10 minutes of
+          TxLINE data: time in each pitch zone (box ×3.5, final third ×2,
+          attack ×1, own half ×0.3), shots on target and corners. Territory
+          share scales a Poisson goal rate (base 0.14 per team per 5&apos;),
+          each shot adds 25%, and P = 1 − e^(−λ). Fully transparent — for fun,
+          not financial advice.
+        </p>
+      </details>
     </motion.div>
   );
 }

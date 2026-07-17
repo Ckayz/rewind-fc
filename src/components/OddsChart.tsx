@@ -54,12 +54,16 @@ export function OddsChart({
 
   return (
     <div className="glass rounded-xl p-4">
-      <h3 className="mb-2 flex items-baseline justify-between font-display text-lg font-semibold uppercase tracking-widest text-pitch-300">
+      <h3 className="mb-1 flex items-baseline justify-between font-display text-lg font-semibold uppercase tracking-widest text-pitch-300">
         Odds movement — StablePrice
         <span className="text-[10px] normal-case tracking-normal text-pitch-500">
           display capped at {ODDS_CAP}.00
         </span>
       </h3>
+      <p className="mb-2 text-[10px] text-pitch-500">
+        TxODDS consensus of sharp bookmakers, de-margined & outlier-filtered,
+        every tick Merkle-anchored on Solana via TxLINE.
+      </p>
       <div className="h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
