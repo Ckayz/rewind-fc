@@ -97,6 +97,16 @@ export default function AboutPage() {
             <strong>Sponsorship:</strong> the odds chart and goal moments are
             premium, contextual ad inventory during replays.
           </li>
+          <li>
+            <strong>MM quoting layer (B2B):</strong> our forecast prices builder
+            5-minute sub-markets; a market maker&apos;s winner-market inventory
+            is routed across wallets and netted into one parent hedge, every
+            sub-market settled on a TxLINE proof. Simulated live in the{" "}
+            <a href="/desk" className="text-volt hover:underline">
+              Liquidity Desk
+            </a>
+            .
+          </li>
         </ul>
         <QuoteCard />
       </Section>
