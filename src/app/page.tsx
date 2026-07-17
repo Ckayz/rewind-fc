@@ -59,6 +59,19 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Final Showdown banner */}
+      <Link
+        href="/final"
+        className="glass -mt-4 flex items-center justify-between rounded-xl border-gold/40 px-5 py-4 transition-colors hover:border-gold"
+      >
+        <span className="font-display text-xl font-bold uppercase tracking-wide text-gold">
+          🏆 Final Showdown — exact score &amp; first scorer jackpots
+        </span>
+        <span className="font-display text-sm font-semibold uppercase text-pitch-300">
+          Enter →
+        </span>
+      </Link>
+
       {/* Upcoming (live window) */}
       <section>
         <h2 className="mb-4 font-display text-2xl font-bold uppercase tracking-wide text-pitch-100">

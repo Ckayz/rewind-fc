@@ -1,17 +1,27 @@
 import "server-only";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, ne } from "drizzle-orm";
 import { db } from "@/db";
 import { fixtures, picks, users } from "@/db/schema";
 import { getTimeline } from "@/lib/data";
 import { foldTimeline } from "@/lib/replay/timeline";
 
-export const POINTS = { winner: 100, hilo: 50, liveMultiplier: 3 } as const;
+export const POINTS = {
+  winner: 100,
+  hilo: 50,
+  exactScore: 500,
+  firstScorer: 300,
+  liveMultiplier: 3,
+} as const;
 
 export interface PickSelection {
   pick?: "P1" | "X" | "P2"; // winner market
   stat?: "corners" | "goals"; // hilo market
   line?: number;
   side?: "over" | "under";
+  scoreP1?: number; // exact_score market
+  scoreP2?: number;
+  playerId?: number; // first_scorer / mvp markets
+  playerName?: string;
 }
 
 export function canonicalPickMessage(
@@ -27,6 +37,18 @@ export function marketKeyOf(market: string, selection: PickSelection): string {
   return market === "hilo" ? `hilo:${selection.stat}` : market;
 }
 
+/** first goal event's scorer surname from a compiled timeline, if named */
+function firstScorerName(
+  tl: NonNullable<Awaited<ReturnType<typeof getTimeline>>>
+): string | null {
+  const goal = tl.items.find(
+    (i) => i.kind === "score" && (i.payload as { type?: string }).type === "goal"
+  );
+  const text = (goal?.payload as { text?: string })?.text ?? "";
+  const m = text.match(/^GOAL — (.+) \(/);
+  return m ? m[1] : null;
+}
+
 /** Settle all open picks whose fixtures have results. Lazy — called from leaderboard/picks reads. */
 export async function settleOpenPicks(): Promise<number> {
   const open = await db
@@ -40,7 +62,7 @@ export async function settleOpenPicks(): Promise<number> {
     })
     .from(picks)
     .innerJoin(fixtures, eq(picks.fixtureId, fixtures.fixtureId))
-    .where(and(eq(picks.status, "open"), isNull(picks.settledAt)));
+    .where(and(eq(picks.status, "open"), isNull(picks.settledAt), ne(picks.market, "mvp")));
 
   let settled = 0;
   const timelineCache = new Map<string, Awaited<ReturnType<typeof getTimeline>>>();
@@ -79,9 +101,34 @@ export async function settleOpenPicks(): Promise<number> {
       }
     }
 
+    if (p.market === "exact_score" && sel.scoreP1 !== undefined && sel.scoreP2 !== undefined) {
+      correct = sel.scoreP1 === p.finalScore.p1 && sel.scoreP2 === p.finalScore.p2;
+    } else if (p.market === "first_scorer" && sel.playerName) {
+      if (!timelineCache.has(p.fixtureId)) {
+        timelineCache.set(p.fixtureId, await getTimeline(p.fixtureId));
+      }
+      const tl = timelineCache.get(p.fixtureId);
+      if (tl) {
+        const scorer = firstScorerName(tl);
+        if (scorer !== null) {
+          correct = sel.playerName.toLowerCase().includes(scorer.toLowerCase());
+        }
+      }
+    }
+
     if (correct === null) continue;
-    const base = p.market === "winner" ? POINTS.winner : POINTS.hilo;
-    const pts = correct ? base * (p.mode === "live" ? POINTS.liveMultiplier : 1) : 0;
+    const base =
+      p.market === "winner"
+        ? POINTS.winner
+        : p.market === "exact_score"
+          ? POINTS.exactScore
+          : p.market === "first_scorer"
+            ? POINTS.firstScorer
+            : POINTS.hilo;
+    const boostable = p.market === "winner" || p.market === "hilo";
+    const pts = correct
+      ? base * (boostable && p.mode === "live" ? POINTS.liveMultiplier : 1)
+      : 0;
     await db
       .update(picks)
       .set({ status: correct ? "won" : "lost", points: pts, settledAt: new Date() })

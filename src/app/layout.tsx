@@ -46,6 +46,12 @@ export default function RootLayout({
               </span>
             </Link>
             <div className="ml-auto flex items-center gap-3 font-display text-base font-semibold uppercase tracking-wide text-pitch-300 sm:gap-4 sm:text-lg">
+              <Link
+                href="/final"
+                className="text-gold hover:text-volt transition-colors"
+              >
+                Final
+              </Link>
               <Link href="/bracket" className="hover:text-volt transition-colors">
                 Bracket
               </Link>

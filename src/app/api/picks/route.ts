@@ -38,20 +38,28 @@ export async function POST(req: Request) {
     body as {
       fixtureId: string;
       mode: "replay" | "live";
-      market: "winner" | "hilo";
+      market: string;
       selection: PickSelection;
       signature: string;
       placedAtVirtualMs?: number;
     };
 
-  if (!fixtureId || !["replay", "live"].includes(mode) || !["winner", "hilo"].includes(market)) {
+  if (
+    !fixtureId ||
+    !["replay", "live"].includes(mode) ||
+    !["winner", "hilo", "exact_score", "first_scorer", "mvp"].includes(market)
+  ) {
     return NextResponse.json({ error: "bad request" }, { status: 400 });
   }
   const fixture = await getFixture(fixtureId);
   if (!fixture) return NextResponse.json({ error: "unknown fixture" }, { status: 404 });
 
-  // live picks lock at kickoff
-  if (mode === "live" && Date.now() >= fixture.startTime.getTime()) {
+  // live picks lock at kickoff (mvp votes stay open on finished matches)
+  if (
+    mode === "live" &&
+    market !== "mvp" &&
+    Date.now() >= fixture.startTime.getTime()
+  ) {
     return NextResponse.json({ error: "match already kicked off" }, { status: 409 });
   }
 

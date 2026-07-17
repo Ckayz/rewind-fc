@@ -9,6 +9,8 @@ Screen-record at 1440p+, phone-frame optional for one mobile shot. Talk fast, sh
 
 Scroll the hub: flags, bracket teaser, replay rail.
 
+**Updated beats to weave in (v5/v6):** Zone Radar match engine during the replay ("every dot is a real player — formations from TxLINE lineups"), the ⚡ Next 5 Minutes forecast calling the 87' goal ("✓ Called it"), goal horn + confetti (sound ON for this shot), 🏆 /final Showdown jackpots (exact score + first scorer), ⭐ Fan MVP wallet vote, Share card (paste match URL in X composer — rich card unfurls).
+
 **0:25–1:30 — Time Machine (the hero)**
 Open England v Argentina (`/match/18241006`) → hit ▶ Replay.
 - Point out the ticking clock, real events firing (54' England goal → 87'+91' Argentina).

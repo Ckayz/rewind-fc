@@ -12,6 +12,8 @@ import { LivePanel } from "@/components/LivePanel";
 import { PitchLineup } from "@/components/PitchLineup";
 import { MatchSheet } from "@/components/MatchSheet";
 import { MatchCinema } from "@/components/MatchCinema";
+import { ShareBar } from "@/components/ShareBar";
+import { MvpVote } from "@/components/MvpVote";
 
 export const revalidate = 300;
 
@@ -32,13 +34,19 @@ export default async function MatchPage({
 
   return (
     <div className="flex flex-col gap-6 pt-8">
-      <div className="flex items-center justify-between text-sm text-pitch-300">
+      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-pitch-300">
         <span className="font-semibold uppercase tracking-widest">
           {STAGE_LABEL[fixture.stage]}
         </span>
-        <Link href="/matches" className="text-volt hover:underline">
-          ← All matches
-        </Link>
+        <div className="flex items-center gap-4">
+          <ShareBar
+            title={`${fixture.p1} ${fixture.score ? `${fixture.score.p1}–${fixture.score.p2}` : "v"} ${fixture.p2}`}
+            path={`/match/${fixture.fixtureId}`}
+          />
+          <Link href="/matches" className="text-volt hover:underline">
+            ← All matches
+          </Link>
+        </div>
       </div>
 
       {finished ? (
@@ -119,11 +127,19 @@ export default async function MatchPage({
         />
       )}
       {timeline?.meta.lineups && (
-        <PitchLineup
-          lineups={timeline.meta.lineups}
-          p1={fixture.p1}
-          p2={fixture.p2}
-        />
+        <>
+          <MvpVote
+            fixtureId={fixture.fixtureId}
+            p1={fixture.p1}
+            p2={fixture.p2}
+            lineups={timeline.meta.lineups}
+          />
+          <PitchLineup
+            lineups={timeline.meta.lineups}
+            p1={fixture.p1}
+            p2={fixture.p2}
+          />
+        </>
       )}
     </div>
   );

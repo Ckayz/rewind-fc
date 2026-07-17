@@ -12,7 +12,10 @@ import { PredictionPanel } from "@/components/PredictionPanel";
 import { PitchLineup } from "@/components/PitchLineup";
 import { PitchRadar } from "@/components/PitchRadar";
 import { ForecastPanel } from "@/components/ForecastPanel";
+import { Confetti } from "@/components/Confetti";
 import { computeForecast, windowStats, type Forecast } from "@/lib/forecast";
+import { goalHorn, setSoundEnabled, soundEnabled } from "@/lib/sfx";
+import { punditLine } from "@/lib/pundit";
 
 const SPEEDS = [
   { label: "×30", value: 30 },
@@ -51,10 +54,16 @@ export function ReplayPlayer({ timeline }: { timeline: CompiledTimeline }) {
   const [goalFlash, setGoalFlash] = useState<string | null>(null);
   const prevGoals = useRef(0);
   const totalGoals = folded.score.p1 + folded.score.p2;
+  const [sound, setSound] = useState(false);
+  useEffect(() => setSound(soundEnabled()), []);
+  const [confettiKey, setConfettiKey] = useState(0);
+
   useEffect(() => {
     if (totalGoals > prevGoals.current && clock.playing) {
       const latest = folded.events.find((e) => e.type === "goal");
       setGoalFlash(latest?.text ?? "GOAL");
+      goalHorn();
+      setConfettiKey((k) => k + 1);
       // score the model: forecast snapshot from inside the 5-min window pre-goal
       const goalT = latest?.offsetMs ?? clock.virtualMs;
       const snap = [...forecastLog.current]
@@ -77,8 +86,15 @@ export function ReplayPlayer({ timeline }: { timeline: CompiledTimeline }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [totalGoals, clock.playing, folded.events]);
 
+  const pundit =
+    folded.events[0] &&
+    clock.virtualMs - folded.events[0].offsetMs < 3_000 * clock.speed
+      ? punditLine(folded.events[0], folded.score, timeline.meta.p1, timeline.meta.p2)
+      : null;
+
   return (
     <div className="relative flex flex-col gap-5">
+      {confettiKey > 0 && <Confetti key={confettiKey} />}
       <AnimatePresence>
         {goalFlash && !reduced && (
           <motion.div
@@ -156,6 +172,17 @@ export function ReplayPlayer({ timeline }: { timeline: CompiledTimeline }) {
         <span className="score-digits w-12 text-right text-lg text-pitch-300">
           {minute}&apos;
         </span>
+        <button
+          onClick={() => {
+            const next = !sound;
+            setSound(next);
+            setSoundEnabled(next);
+          }}
+          title="Goal sound"
+          className="rounded-md border border-pitch-700 px-2 py-1.5 text-sm hover:border-volt"
+        >
+          {sound ? "🔊" : "🔇"}
+        </button>
       </div>
 
       <PitchRadar
@@ -207,6 +234,19 @@ export function ReplayPlayer({ timeline }: { timeline: CompiledTimeline }) {
           <h3 className="mb-2 font-display text-lg font-semibold uppercase tracking-widest text-pitch-300">
             Live feed
           </h3>
+          <AnimatePresence mode="wait">
+            {pundit && (
+              <motion.p
+                key={pundit}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="mb-2 border-l-2 border-volt/50 pl-2 text-xs italic text-pitch-300"
+              >
+                🎙 {pundit}
+              </motion.p>
+            )}
+          </AnimatePresence>
           <EventFeed events={folded.events} />
         </div>
       </div>

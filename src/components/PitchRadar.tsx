@@ -64,6 +64,7 @@ interface Sim {
   lastRetarget: number;
   zoneKey: string;
   eventKey: string;
+  pingUntil: number; // wt deadline after which the event ping hides
 }
 
 function initPlayers(lineups: { p1: LineupSide; p2: LineupSide }): SimPlayer[] {
@@ -120,6 +121,7 @@ function tick(sim: Sim, dt: number, wt: number, zone: BallZone | null, lastEvent
   if (eventKey && eventKey !== sim.eventKey && lastEvent) {
     const spot = eventBallSpot(lastEvent, zone);
     sim.eventKey = eventKey;
+    sim.pingUntil = wt + 2600; // ping fades on real time, even while paused
     if (spot) {
       sim.ballTarget = spot;
       sim.nextPassAt = wt + 1400;
@@ -258,6 +260,7 @@ export function PitchRadar({
       lastRetarget: 0,
       zoneKey: "init",
       eventKey: "",
+      pingUntil: 0,
     };
   }
   // late lineups (live announcements) — hydrate players once available
@@ -279,7 +282,8 @@ export function PitchRadar({
   });
 
   const sim = simRef.current;
-  const ping = eventPing(lastEvent, zone);
+  const ping =
+    wtRef.current < sim.pingUntil ? eventPing(lastEvent, zone) : null;
   const possessing = zone ? (zone.team === "p1" ? p1 : p2) : null;
   void tMs;
 
