@@ -10,6 +10,7 @@ import { EventFeed } from "@/components/EventFeed";
 import { OddsChart } from "@/components/OddsChart";
 import { PredictionPanel } from "@/components/PredictionPanel";
 import { PitchLineup } from "@/components/PitchLineup";
+import { PitchRadar } from "@/components/PitchRadar";
 
 const SPEEDS = [
   { label: "×30", value: 30 },
@@ -123,6 +124,20 @@ export function ReplayPlayer({ timeline }: { timeline: CompiledTimeline }) {
           {minute}&apos;
         </span>
       </div>
+
+      <PitchRadar
+        zone={folded.zone}
+        lastEvent={
+          // show a ping for ~2.5 real seconds regardless of playback speed
+          folded.events[0] &&
+          clock.virtualMs - folded.events[0].offsetMs < 2_500 * clock.speed
+            ? folded.events[0]
+            : null
+        }
+        p1={timeline.meta.p1}
+        p2={timeline.meta.p2}
+        tMs={clock.virtualMs}
+      />
 
       <div className="grid gap-5 lg:grid-cols-[1.2fr_1fr]">
         <div className="flex flex-col gap-5">

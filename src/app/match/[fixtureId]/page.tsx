@@ -11,6 +11,7 @@ import { VerifyButton } from "@/components/VerifyModal";
 import { LivePanel } from "@/components/LivePanel";
 import { PitchLineup } from "@/components/PitchLineup";
 import { MatchSheet } from "@/components/MatchSheet";
+import { MatchCinema } from "@/components/MatchCinema";
 
 export const revalidate = 300;
 
@@ -101,6 +102,14 @@ export default async function MatchPage({
           )}
         </div>
       </div>
+
+      <MatchCinema
+        fixtureId={fixture.fixtureId}
+        p1={fixture.p1}
+        p2={fixture.p2}
+        finished={finished}
+        startTime={fixture.startTime}
+      />
 
       {timeline?.meta.playerStats && (
         <MatchSheet

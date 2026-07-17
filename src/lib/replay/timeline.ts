@@ -19,12 +19,18 @@ export interface MatchEvent {
   text: string;
 }
 
+export interface BallZone {
+  team: "p1" | "p2";
+  z: "safe" | "attack" | "danger" | "box";
+}
+
 export interface FoldedState {
   score: { p1: number; p2: number };
   phase: string;
   events: MatchEvent[]; // events up to t, newest first
   odds: OddsPoint[];
   finished: boolean;
+  zone: BallZone | null; // latest ball-territory state at t
 }
 
 const msToMin = (ms: number) => Math.floor(ms / 60_000);
@@ -37,6 +43,7 @@ export function foldTimeline(tl: CompiledTimeline, tMs: number): FoldedState {
   const score = { p1: 0, p2: 0 };
   let phase = "Pre-match";
   let finished = false;
+  let zone: BallZone | null = null;
   const events: MatchEvent[] = [];
   const odds: OddsPoint[] = [];
 
@@ -71,6 +78,8 @@ export function foldTimeline(tl: CompiledTimeline, tMs: number): FoldedState {
     } else if (item.kind === "odds") {
       const p = item.payload as { home?: number; draw?: number; away?: number };
       odds.push({ tMin: msToMin(item.offsetMs), ...p });
+    } else if (item.kind === "zone") {
+      zone = item.payload as unknown as BallZone;
     }
   }
 
@@ -81,7 +90,7 @@ export function foldTimeline(tl: CompiledTimeline, tMs: number): FoldedState {
     if (nearest) nearest.goal = e.text;
   }
 
-  return { score, phase, events: events.reverse(), odds, finished };
+  return { score, phase, events: events.reverse(), odds, finished, zone };
 }
 
 /** Deterministic sample timeline until real TxLINE data replaces it. */

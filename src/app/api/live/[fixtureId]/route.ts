@@ -17,7 +17,14 @@ interface ScoreRec {
   Clock?: { Running: boolean; Seconds: number };
   Stats?: Record<string, number>;
   Data?: Record<string, unknown>;
+  Participant?: number;
+  PossessionType?: string;
 }
+
+const ZONE: Record<string, string> = {
+  SafePossession: "safe", Possession: "safe", AttackPossession: "attack",
+  DangerPossession: "danger", HighDangerPossession: "box",
+};
 
 export async function GET(
   _req: Request,
@@ -98,6 +105,14 @@ export async function GET(
         clockSeconds: latest?.Clock?.Seconds ?? null,
         odds: oddsOut,
         events,
+        zone: (() => {
+          const zr = [...recs]
+            .sort((a, b) => (b.Seq ?? 0) - (a.Seq ?? 0))
+            .find((r) => r.PossessionType && ZONE[r.PossessionType] && r.Participant);
+          return zr
+            ? { team: zr.Participant === 1 ? "p1" : "p2", z: ZONE[zr.PossessionType!] }
+            : null;
+        })(),
         liveOddsUpdates: liveOddsCount,
         fetchedAt: Date.now(),
       },

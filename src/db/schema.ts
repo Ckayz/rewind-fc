@@ -30,7 +30,7 @@ export const fixtures = pgTable("fixtures", {
 
 export interface TimelineItem {
   offsetMs: number; // ms since kickoff
-  kind: "score" | "odds" | "phase";
+  kind: "score" | "odds" | "phase" | "zone";
   payload: Record<string, unknown>;
 }
 

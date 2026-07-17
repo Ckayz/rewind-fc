@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Scoreboard } from "@/components/Scoreboard";
+import { PitchRadar } from "@/components/PitchRadar";
+import type { BallZone } from "@/lib/replay/timeline";
 import { flag } from "@/lib/flags";
 
 interface LiveState {
@@ -12,6 +14,7 @@ interface LiveState {
   clockSeconds: number | null;
   odds: { home?: number; draw?: number; away?: number } | null;
   events: { action?: string; seq?: number; minute: number | null }[];
+  zone: BallZone | null;
 }
 
 const ICON: Record<string, string> = {
@@ -86,6 +89,14 @@ export function LivePanel({
         }
         clockLabel={clock}
         live={!!inPlay}
+      />
+      <PitchRadar
+        zone={state?.zone ?? null}
+        lastEvent={null}
+        p1={p1}
+        p2={p2}
+        tMs={state?.clockSeconds ? state.clockSeconds * 1000 : 0}
+        live
       />
       <div className="flex items-center justify-end gap-1.5 text-[10px] font-semibold uppercase tracking-widest">
         <span

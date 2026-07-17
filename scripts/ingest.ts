@@ -102,7 +102,17 @@ interface ScoreRecord {
   PlayerStats?: Record<string, Record<string, Record<string, number>>>;
   Participant1Id?: number;
   Participant2Id?: number;
+  Participant?: number; // top-level team ref on possession/set-piece records
+  PossessionType?: string;
 }
+
+const ZONE: Record<string, "safe" | "attack" | "danger" | "box"> = {
+  SafePossession: "safe",
+  Possession: "safe",
+  AttackPossession: "attack",
+  DangerPossession: "danger",
+  HighDangerPossession: "box",
+};
 
 /** "Gordon, Anthony" → "Anthony Gordon" */
 const displayName = (n: string) => {
@@ -134,7 +144,7 @@ const PHASE_LABEL: Record<number, string> = {
 
 interface TimelineItem {
   offsetMs: number;
-  kind: "score" | "odds" | "phase";
+  kind: "score" | "odds" | "phase" | "zone";
   payload: Record<string, unknown>;
 }
 
@@ -288,7 +298,16 @@ function compileScores(fx: RawFixture, records: ScoreRecord[]): Compiled | null 
       lastStats = { ...lastStats, ...r.Stats };
     }
 
-    const t = team(r);
+    // ball-zone timeline from possession states (top-level Participant)
+    if (r.PossessionType && ZONE[r.PossessionType] && (r.Participant === 1 || r.Participant === 2)) {
+      items.push({
+        offsetMs: clockMs,
+        kind: "zone",
+        payload: { team: r.Participant === 1 ? "p1" : "p2", z: ZONE[r.PossessionType] },
+      });
+    }
+
+    const t = team(r) ?? (r.Participant === 1 ? "p1" : r.Participant === 2 ? "p2" : undefined);
     const name = t === "p1" ? fx.Participant1 : t === "p2" ? fx.Participant2 : "";
 
     switch (r.Action) {
