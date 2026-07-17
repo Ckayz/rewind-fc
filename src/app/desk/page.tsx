@@ -24,7 +24,7 @@ export default async function DeskPage() {
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="font-display text-4xl font-bold">💧 Liquidity desk</h1>
         <span className="rounded-lg border border-gold/40 bg-gold/5 px-3 py-1.5 text-xs font-semibold text-gold">
-          Concept simulation · no real orders or funds
+          Paper trading · venue integration next
         </span>
       </div>
       <p className="max-w-2xl text-sm text-pitch-300">

@@ -1,12 +1,23 @@
-# ⚽ Rewind FC — World Cup Time Machine
+# ⚽ Rewind FC — the World Cup fan terminal on TxLINE × Solana
 
-**Every match. Rewound live.** Replay World Cup 2026 knockout matches as if they were happening now — goals, VAR drama, and real StablePrice odds swings tick by tick — then put your predictions on a wallet-signed leaderboard. Every data point is Merkle-anchored to Solana by [TxLINE](https://txline-docs.txodds.com) and verifiable in one click.
+**Watch it. Predict it. Make the market.** Rewind FC turns TxLINE's verifiable match data into a full fan-trading experience: every knockout match replayable as if live, a momentum model that calls the next five minutes, and a **market-making desk** where liquidity providers earn on forecast-priced in-play markets — every data point Merkle-anchored to Solana by [TxLINE](https://txline-docs.txodds.com).
 
 **Live app:** https://rewind-fc.vercel.app
 
 Built solo in 48h for the **TxODDS × Solana World Cup Hackathon** (Consumer & Fan Experiences track) on Superteam Earn.
 
-## What it does
+## 💧 The Liquidity Desk — the core engine
+
+The economic heart of Rewind FC (`/desk`), a paper-trading desk today with venue integration as the next milestone:
+
+- **LP Rewards program** — mirrors Polymarket's documented liquidity-rewards mechanics exactly: order score `S = ((v − s)/v)²` (quadratic reward for quoting tight to the midpoint), one-sided books earn ⅓, daily epochs, pro-rata pool payouts, $1 minimum. Provide size + spread on any market and watch projected daily earnings react in real time.
+- **Forecast-priced 5-minute markets** — our momentum model (zone pressure + shots + corners over a 10-min lookback → Poisson intensities) prices "who scores next?" markets for every 5-minute window; the parent match-winner market is implied from StablePrice consensus odds.
+- **18-wallet inventory router** — an MM's parent-market inventory is fanned across wallets into the sub-markets, with an explicit **no-self-cross guard** (one own-wallet per book side — the line between capacity fan-out and wash trading) and the residual delta netted into a single parent hedge.
+- **Verifiable settlement** — every sub-market resolves against TxLINE's Merkle-anchored feed; the same proof system is user-inspectable in the Proof Room.
+
+The same forecast that powers the desk is scored publicly in replays ("✓ Called it" — e.g. Argentina at 20% one minute before their 87' winner), so the pricing engine's accuracy is demonstrable, not claimed.
+
+## What else it does
 
 - **🕰 Time Machine replay** — the full match log from `GET /api/scores/historical/{fixtureId}` (kickoff, goals, cards, VAR, penalties, `Clock` seconds) is merged with 5-minute-bucket odds history into one compiled timeline, then replayed client-side on a virtual clock at ×30/×60/×120 with scrubbing. The odds chart draws itself as the match unfolds.
 - **📡 Zone Radar** — bet365-style animated 2D pitch driven by TxLINE possession states (`Participant` + `PossessionType` on every record): the ball glides between thirds, possession tints the attacking half, and shots/corners/goals ping on the pitch — live during matches and inside every replay. (Honest data note: zone-level ball territory, not optical player tracking — no free tracking feed exists for WC 2026; this is the same event-driven technique betting sites use.)
@@ -78,9 +89,10 @@ pnpm dev
 | 5/6 | reds | | 3000 | H2 |
 | 7/8 | corners | | 6000 | penalty shootout |
 
-## Honest limitations
+## Roadmap & scope notes
 
+- **Desk execution:** the Liquidity Desk runs the full pricing/routing/rewards engine on live data in paper-trading mode; venue integration (order execution + on-chain settlement of the 5-min markets against TxLINE proofs) is the next milestone.
 - Group-stage replays are unavailable — TxLINE's historical retention had already expired for June matches when we ingested (July 17). All knockout matches are in.
-- Replay-mode picks can theoretically be "cheated" by someone who knows the result — that's why live picks score **×3**. It's a fan game, not a market.
+- Replay-mode picks can theoretically be "cheated" by someone who knows the result — that's why live picks score **×3**.
 
 

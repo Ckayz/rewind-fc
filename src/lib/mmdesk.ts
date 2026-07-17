@@ -1,10 +1,10 @@
 import type { Forecast } from "@/lib/forecast";
 
 /**
- * CONCEPT SIMULATION ONLY — no real orders, funds or venue calls.
- * Models how a market maker would price builder 5-minute sub-markets from
- * Rewind FC's forecast and route inventory across N wallets, netting the
- * book delta back into the parent match-winner market. Deterministic.
+ * Paper-trading engine (no venue orders yet — integration is the next step).
+ * Prices builder 5-minute sub-markets from Rewind FC's forecast and routes
+ * MM inventory across N wallets, netting the book delta back into the parent
+ * match-winner market. Deterministic.
  */
 
 export interface WalletQuote {

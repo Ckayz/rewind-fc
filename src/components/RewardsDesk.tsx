@@ -249,7 +249,7 @@ export function RewardsDesk({
           closer your quote sits to the midpoint, the more you earn,
           quadratically. One-sided books earn ⅓. Daily epoch, paid pro-rata
           from each market&apos;s pool; earnings under $1/day aren&apos;t paid.
-          Simulation — no real orders or funds.
+          Paper-trading desk — venue integration ships next.
         </p>
       </details>
     </div>
