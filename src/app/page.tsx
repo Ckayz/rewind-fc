@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { FixtureCard } from "@/components/FixtureCard";
+import { HeroCanvas } from "@/components/HeroCanvas";
+import { StaggerGrid, StaggerItem } from "@/components/motion/FadeRise";
 import { listFixtures } from "@/lib/data";
 
 export const revalidate = 60;
@@ -15,6 +17,7 @@ export default async function Home() {
     <div className="flex flex-col gap-12">
       {/* Hero */}
       <section className="pitch-lines relative -mx-4 overflow-hidden px-4 pb-14 pt-16 text-center">
+        <HeroCanvas />
         <p
           className="animate-rise font-display text-lg font-semibold uppercase tracking-[0.3em] text-volt"
           style={{ animationDelay: "0ms" }}
@@ -61,11 +64,13 @@ export default async function Home() {
         <h2 className="mb-4 font-display text-2xl font-bold uppercase tracking-wide text-pitch-100">
           Still to play
         </h2>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <StaggerGrid className="grid gap-3 sm:grid-cols-2">
           {upcoming.map((f) => (
-            <FixtureCard key={f.fixtureId} fixture={f} />
+            <StaggerItem key={f.fixtureId}>
+              <FixtureCard fixture={f} />
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerGrid>
       </section>
 
       {/* Replay rail */}
@@ -81,11 +86,13 @@ export default async function Home() {
             All matches →
           </Link>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <StaggerGrid className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {replays.map((f) => (
-            <FixtureCard key={f.fixtureId} fixture={f} />
+            <StaggerItem key={f.fixtureId}>
+              <FixtureCard fixture={f} />
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerGrid>
       </section>
     </div>
   );

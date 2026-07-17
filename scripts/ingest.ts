@@ -139,8 +139,8 @@ interface TimelineItem {
 }
 
 export interface MetaLineups {
-  p1: { team: string; players: { id: number; name: string; num: string; starter: boolean }[] };
-  p2: { team: string; players: { id: number; name: string; num: string; starter: boolean }[] };
+  p1: { team: string; players: { id: number; name: string; num: string; starter: boolean; pos?: number }[] };
+  p2: { team: string; players: { id: number; name: string; num: string; starter: boolean; pos?: number }[] };
 }
 
 export interface MetaPlayerStat {
@@ -187,6 +187,7 @@ function compileScores(fx: RawFixture, records: ScoreRecord[]): Compiled | null 
           name: displayName(p.player.preferredName),
           num: p.rosterNumber,
           starter: p.starter,
+          pos: p.positionId,
         };
       });
     const bySide = Object.fromEntries(

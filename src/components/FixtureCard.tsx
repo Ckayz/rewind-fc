@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { motion, useReducedMotion } from "motion/react";
 import { STAGE_LABEL, type Stage } from "@/data/sample-fixtures";
 import { flag } from "@/lib/flags";
 
@@ -27,11 +30,21 @@ export function FixtureCard({ fixture }: { fixture: CardFixture }) {
   const { p1, p2, score, status, stage } = fixture;
   const finished = status === "finished";
   const live = status === "live";
+  const reduced = useReducedMotion();
 
   return (
+    <motion.div
+      whileHover={
+        reduced
+          ? undefined
+          : { y: -4, boxShadow: "0 12px 32px -14px rgba(198,255,0,0.35)" }
+      }
+      transition={{ type: "spring", stiffness: 320, damping: 22 }}
+      className="rounded-xl"
+    >
     <Link
       href={`/match/${fixture.fixtureId}`}
-      className="glass group relative block rounded-xl px-4 py-3 transition-transform hover:-translate-y-0.5 hover:border-volt/40"
+      className="glass group relative block rounded-xl px-4 py-3 hover:border-volt/40"
     >
       <div className="flex items-center justify-between text-[11px] font-medium uppercase tracking-widest text-pitch-400">
         <span>{STAGE_LABEL[stage]}</span>
@@ -83,5 +96,6 @@ export function FixtureCard({ fixture }: { fixture: CardFixture }) {
         </div>
       )}
     </Link>
+    </motion.div>
   );
 }

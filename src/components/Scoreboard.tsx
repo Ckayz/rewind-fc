@@ -1,4 +1,27 @@
+"use client";
+
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { flag } from "@/lib/flags";
+
+function FlipDigit({ value, win }: { value: number; win: boolean }) {
+  const reduced = useReducedMotion();
+  return (
+    <span className="relative inline-block overflow-hidden align-baseline">
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.span
+          key={value}
+          initial={reduced ? false : { y: "-100%", opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={reduced ? undefined : { y: "100%", opacity: 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 26 }}
+          className={`inline-block ${win ? "text-volt volt-glow" : ""}`}
+        >
+          {value}
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  );
+}
 
 export function Scoreboard({
   p1,
@@ -36,13 +59,9 @@ export function Scoreboard({
           {p1}
         </span>
         <span className="score-digits text-5xl leading-none sm:text-8xl">
-          <span className={scoreP1 > scoreP2 ? "text-volt volt-glow" : ""}>
-            {scoreP1}
-          </span>
+          <FlipDigit value={scoreP1} win={scoreP1 > scoreP2} />
           <span className="px-2 text-pitch-600">–</span>
-          <span className={scoreP2 > scoreP1 ? "text-volt volt-glow" : ""}>
-            {scoreP2}
-          </span>
+          <FlipDigit value={scoreP2} win={scoreP2 > scoreP1} />
         </span>
         <span className="truncate text-left font-display text-xl font-bold uppercase sm:text-4xl">
           {p2}

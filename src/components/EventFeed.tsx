@@ -1,3 +1,6 @@
+"use client";
+
+import { motion, useReducedMotion } from "motion/react";
 import type { MatchEvent } from "@/lib/replay/timeline";
 
 const ICON: Record<MatchEvent["type"], string> = {
@@ -14,6 +17,7 @@ const ICON: Record<MatchEvent["type"], string> = {
 };
 
 export function EventFeed({ events }: { events: MatchEvent[] }) {
+  const reduced = useReducedMotion();
   if (events.length === 0) {
     return (
       <p className="py-8 text-center text-sm text-pitch-400">
@@ -24,8 +28,11 @@ export function EventFeed({ events }: { events: MatchEvent[] }) {
   return (
     <ol className="divide-y divide-pitch-700/40">
       {events.map((e, i) => (
-        <li
+        <motion.li
           key={`${e.offsetMs}-${e.type}-${i}`}
+          initial={reduced || i > 2 ? false : { opacity: 0, x: -14 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
           className={`flex items-center gap-3 px-1 py-2.5 ${
             i === 0 ? "animate-tick" : ""
           }`}
@@ -45,7 +52,7 @@ export function EventFeed({ events }: { events: MatchEvent[] }) {
           >
             {e.text}
           </span>
-        </li>
+        </motion.li>
       ))}
     </ol>
   );

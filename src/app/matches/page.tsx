@@ -1,4 +1,5 @@
 import { FixtureCard } from "@/components/FixtureCard";
+import { StaggerGrid, StaggerItem } from "@/components/motion/FadeRise";
 import { STAGE_LABEL, type Stage } from "@/data/sample-fixtures";
 import { listFixtures } from "@/lib/data";
 
@@ -22,11 +23,13 @@ export default async function MatchesPage() {
             <h2 className="mb-3 font-display text-xl font-semibold uppercase tracking-widest text-pitch-300">
               {STAGE_LABEL[stage]}
             </h2>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <StaggerGrid className="grid gap-3 sm:grid-cols-2">
               {fixtures.map((f) => (
-                <FixtureCard key={f.fixtureId} fixture={f} />
+                <StaggerItem key={f.fixtureId}>
+                  <FixtureCard fixture={f} />
+                </StaggerItem>
               ))}
-            </div>
+            </StaggerGrid>
           </section>
         );
       })}

@@ -36,7 +36,13 @@ export interface TimelineItem {
 
 export interface LineupSide {
   team: string;
-  players: { id: number; name: string; num: string; starter: boolean }[];
+  players: {
+    id: number;
+    name: string;
+    num: string;
+    starter: boolean;
+    pos?: number; // TxLINE positionId: 34 GK, 35 DEF, 36 MID, 37 FWD
+  }[];
 }
 
 export interface PlayerStatLine {
