@@ -61,6 +61,9 @@ export default function RootLayout({
               <Link href="/pulse" className="hover:text-volt transition-colors">
                 Pulse
               </Link>
+              <Link href="/lab" className="hover:text-volt transition-colors">
+                Lab
+              </Link>
               <Link
                 href="/proofs"
                 className="text-verify/80 hover:text-verify transition-colors"

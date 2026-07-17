@@ -12,6 +12,8 @@ export const MATCH_VIDEOS: Record<string, string | null> = {
 
 export const LIVE_LINKS = [
   { label: "FIFA.com — official match hub", url: "https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026" },
+  { label: "FIFA+ on DAZN — replays & highlights", url: "https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/highlights" },
   { label: "FOX Sports (US broadcaster)", url: "https://www.foxsports.com/soccer/fifa-world-cup" },
   { label: "Telemundo Deportes (US, Spanish)", url: "https://www.telemundodeportes.com/" },
+  { label: "Twitch Football Fest — watch parties", url: "https://www.twitch.tv/directory/category/sports" },
 ];

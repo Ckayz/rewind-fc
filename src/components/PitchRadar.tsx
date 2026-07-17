@@ -151,9 +151,12 @@ export function PitchRadar({
           />
           {live ? "Live" : "Replay"} · zone radar
           {lineups && (
-            <span className="hidden text-pitch-500 sm:inline">
-              · formations schematic
-            </span>
+            <a
+              href="/lab"
+              className="hidden text-pitch-500 underline-offset-2 hover:text-volt hover:underline sm:inline"
+            >
+              · formations schematic — see real tracking in the Lab
+            </a>
           )}
         </span>
         <AnimatePresence mode="wait">
