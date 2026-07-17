@@ -18,9 +18,14 @@ export interface ReplayClock {
  * Virtual match clock. speed = match-ms per real-ms
  * (e.g. 60 → a 90' match replays in ~90 seconds).
  */
-export function useReplayClock(durationMs: number, initialSpeed = 60): ReplayClock {
-  const [virtualMs, setVirtualMs] = useState(0);
-  const [playing, setPlaying] = useState(false);
+export function useReplayClock(
+  durationMs: number,
+  initialSpeed = 60,
+  startAtMs = 0,
+  autoPlay = false
+): ReplayClock {
+  const [virtualMs, setVirtualMs] = useState(startAtMs);
+  const [playing, setPlaying] = useState(autoPlay);
   const [speed, setSpeed] = useState(initialSpeed);
   const raf = useRef<number>(0);
   const last = useRef<number>(0);

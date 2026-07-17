@@ -47,6 +47,12 @@ export default function RootLayout({
             </Link>
             <div className="ml-auto flex items-center gap-3 font-display text-base font-semibold uppercase tracking-wide text-pitch-300 sm:gap-4 sm:text-lg">
               <Link
+                href="/demo"
+                className="text-live/80 hover:text-live transition-colors"
+              >
+                Demo
+              </Link>
+              <Link
                 href="/final"
                 className="text-gold hover:text-volt transition-colors"
               >

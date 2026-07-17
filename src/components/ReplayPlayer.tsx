@@ -23,8 +23,23 @@ const SPEEDS = [
   { label: "×120", value: 120 },
 ];
 
-export function ReplayPlayer({ timeline }: { timeline: CompiledTimeline }) {
-  const clock = useReplayClock(timeline.meta.durationMs, 60);
+export function ReplayPlayer({
+  timeline,
+  demoLive = false,
+  startAtMs = 0,
+  initialSpeed = 60,
+}: {
+  timeline: CompiledTimeline;
+  demoLive?: boolean;
+  startAtMs?: number;
+  initialSpeed?: number;
+}) {
+  const clock = useReplayClock(
+    timeline.meta.durationMs,
+    initialSpeed,
+    startAtMs,
+    demoLive
+  );
   const folded = useMemo(
     () => foldTimeline(timeline, clock.virtualMs),
     [timeline, clock.virtualMs]
@@ -52,8 +67,10 @@ export function ReplayPlayer({ timeline }: { timeline: CompiledTimeline }) {
   // GOAL moment: flash + banner whenever the folded score total increases
   const reduced = useReducedMotion();
   const [goalFlash, setGoalFlash] = useState<string | null>(null);
-  const prevGoals = useRef(0);
   const totalGoals = folded.score.p1 + folded.score.p2;
+  // seed with the score at the join point (demo joins mid-match) so the
+  // flash only fires on NEW goals, not on mount
+  const prevGoals = useRef(totalGoals);
   const [sound, setSound] = useState(false);
   useEffect(() => setSound(soundEnabled()), []);
   const [confettiKey, setConfettiKey] = useState(0);
@@ -207,6 +224,7 @@ export function ReplayPlayer({ timeline }: { timeline: CompiledTimeline }) {
         tMs={clock.virtualMs}
         lineups={timeline.meta.lineups}
         paused={!clock.playing}
+        live={demoLive}
       />
 
       <div className="grid gap-5 lg:grid-cols-[1.2fr_1fr]">
@@ -223,6 +241,7 @@ export function ReplayPlayer({ timeline }: { timeline: CompiledTimeline }) {
             p1={timeline.meta.p1}
             p2={timeline.meta.p2}
             called={called}
+            live={demoLive}
           />
           <PredictionPanel
             fixtureId={timeline.meta.fixtureId}
