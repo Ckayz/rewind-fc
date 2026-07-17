@@ -132,6 +132,32 @@ export function OddsChart({
               isAnimationActive={false}
               connectNulls
             />
+            {/* snake heads — pulsing leading dot per series */}
+            {(() => {
+              const last = visible.at(-1);
+              if (!last) return null;
+              return (
+                [
+                  ["home", ODDS_COLORS.home],
+                  ["draw", ODDS_COLORS.draw],
+                  ["away", ODDS_COLORS.away],
+                ] as const
+              ).map(([k, color]) => {
+                const v = last[k];
+                if (v === undefined) return null;
+                return (
+                  <ReferenceDot
+                    key={`head-${k}`}
+                    x={last.tMin}
+                    y={v}
+                    r={4}
+                    fill={color}
+                    stroke="none"
+                    className="animate-pulse"
+                  />
+                );
+              });
+            })()}
             {goals.map((g) => (
               <ReferenceDot
                 key={g.tMin}
