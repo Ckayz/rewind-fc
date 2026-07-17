@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { Scoreboard } from "@/components/Scoreboard";
 import { PitchRadar } from "@/components/PitchRadar";
+import { PitchLineup } from "@/components/PitchLineup";
+import { TabPills } from "@/components/TabPills";
 import { ForecastPanel } from "@/components/ForecastPanel";
 import type { Forecast } from "@/lib/forecast";
 import type { BallZone } from "@/lib/replay/timeline";
@@ -42,6 +44,7 @@ export function LivePanel({
   bettingExtra?: React.ReactNode;
 }) {
   const [state, setState] = useState<LiveState | null>(null);
+  const [view, setView] = useState<"match" | "lineups">("match");
   const [streaming, setStreaming] = useState(false);
 
   useEffect(() => {
@@ -101,6 +104,19 @@ export function LivePanel({
       {/* LEFT: match status & info · RIGHT: everything betting */}
       <div className="grid gap-4 lg:grid-cols-[1.55fr_1fr]">
         <div className="flex min-w-0 flex-col gap-4">
+          {state?.lineups && (
+            <TabPills
+              tabs={[
+                { key: "match", label: "Match", icon: "📡" },
+                { key: "lineups", label: "Lineups", icon: "👥" },
+              ]}
+              active={view}
+              onChange={setView}
+            />
+          )}
+          {view === "lineups" && state?.lineups ? (
+            <PitchLineup lineups={state.lineups} p1={p1} p2={p2} />
+          ) : (
           <PitchRadar
             zone={state?.zone ?? null}
             lastEvent={null}
@@ -110,6 +126,7 @@ export function LivePanel({
             live
             lineups={state?.lineups ?? undefined}
           />
+          )}
           <div className="flex items-center justify-end gap-1.5 text-[10px] font-semibold uppercase tracking-widest">
             <span
               className={`h-1.5 w-1.5 rounded-full ${streaming ? "bg-verify animate-live-pulse" : "bg-pitch-600"}`}

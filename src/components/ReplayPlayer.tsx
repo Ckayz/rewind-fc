@@ -11,6 +11,7 @@ import { OddsChart } from "@/components/OddsChart";
 import { PredictionPanel } from "@/components/PredictionPanel";
 import { PitchLineup } from "@/components/PitchLineup";
 import { PitchRadar } from "@/components/PitchRadar";
+import { TabPills } from "@/components/TabPills";
 import { ForecastPanel } from "@/components/ForecastPanel";
 import { Confetti } from "@/components/Confetti";
 import { computeForecast, windowStats, type Forecast } from "@/lib/forecast";
@@ -77,6 +78,7 @@ export function ReplayPlayer({
   // seed with the score at the join point (demo joins mid-match) so the
   // flash only fires on NEW goals, not on mount
   const prevGoals = useRef(totalGoals);
+  const [view, setView] = useState<"match" | "market" | "lineups">("match");
   const [sound, setSound] = useState(false);
   useEffect(() => setSound(soundEnabled()), []);
   const [confettiKey, setConfettiKey] = useState(0);
@@ -254,6 +256,16 @@ export function ReplayPlayer({
       {/* LEFT: match status & info · RIGHT: everything betting */}
       <div className="grid gap-5 lg:grid-cols-[1.55fr_1fr]">
         <div className="flex min-w-0 flex-col gap-5">
+          <TabPills
+            tabs={[
+              { key: "match", label: "Match", icon: "📡" },
+              { key: "market", label: "Market", icon: "📈" },
+              { key: "lineups", label: "Lineups", icon: "👥" },
+            ]}
+            active={view}
+            onChange={setView}
+          />
+          {view === "match" && (
           <PitchRadar
             zone={folded.zone}
             lastEvent={
@@ -270,6 +282,21 @@ export function ReplayPlayer({
             paused={!clock.playing}
             live={demoLive}
           />
+          )}
+          {view === "market" && folded.odds.length > 0 && (
+            <OddsChart
+              data={folded.odds}
+              homeName={timeline.meta.p1}
+              awayName={timeline.meta.p2}
+            />
+          )}
+          {view === "lineups" && timeline.meta.lineups && (
+            <PitchLineup
+              lineups={timeline.meta.lineups}
+              p1={timeline.meta.p1}
+              p2={timeline.meta.p2}
+            />
+          )}
           <div className="glass max-h-[26rem] overflow-y-auto rounded-xl p-4">
             <h3 className="mb-2 font-display text-lg font-semibold uppercase tracking-widest text-pitch-300">
               Live feed
@@ -289,13 +316,6 @@ export function ReplayPlayer({
             </AnimatePresence>
             <EventFeed events={folded.events} />
           </div>
-          {timeline.meta.lineups && (
-            <PitchLineup
-              lineups={timeline.meta.lineups}
-              p1={timeline.meta.p1}
-              p2={timeline.meta.p2}
-            />
-          )}
         </div>
 
         {/* betting rail */}
@@ -322,13 +342,6 @@ export function ReplayPlayer({
             mode="replay"
             virtualMs={clock.virtualMs}
           />
-          {folded.odds.length > 0 && (
-            <OddsChart
-              data={folded.odds}
-              homeName={timeline.meta.p1}
-              awayName={timeline.meta.p2}
-            />
-          )}
         </div>
       </div>
     </div>
