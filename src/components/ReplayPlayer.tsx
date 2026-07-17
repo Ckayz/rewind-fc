@@ -162,7 +162,41 @@ export function ReplayPlayer({
         live={clock.playing}
       />
 
-      {/* Controls */}
+      {/* Controls — demo-live mode hides transport for a broadcast feel */}
+      {demoLive ? (
+        <div className="glass flex items-center gap-4 rounded-xl px-4 py-3">
+          <span className="flex items-center gap-2 font-display text-lg font-bold uppercase text-live">
+            <span className="h-2 w-2 rounded-full bg-live animate-live-pulse" />
+            Live
+          </span>
+          <span className="score-digits text-2xl text-volt volt-glow">
+            {String(minute).padStart(2, "0")}:{String(second).padStart(2, "0")}
+          </span>
+          <span className="text-xs uppercase tracking-widest text-pitch-500">
+            simulated broadcast · real match data
+          </span>
+          <button
+            onClick={() => {
+              clock.seek(78 * 60_000);
+              clock.play();
+            }}
+            className="ml-auto rounded-md border border-pitch-700 px-3 py-1.5 font-display text-sm text-pitch-300 hover:border-volt hover:text-volt"
+          >
+            ↺ Restart demo
+          </button>
+          <button
+            onClick={() => {
+              const next = !sound;
+              setSound(next);
+              setSoundEnabled(next);
+            }}
+            title="Goal sound"
+            className="rounded-md border border-pitch-700 px-2 py-1.5 text-sm hover:border-volt"
+          >
+            {sound ? "🔊" : "🔇"}
+          </button>
+        </div>
+      ) : (
       <div className="glass flex flex-wrap items-center gap-4 rounded-xl px-4 py-3">
         <button
           onClick={clock.toggle}
@@ -209,6 +243,7 @@ export function ReplayPlayer({
           {sound ? "🔊" : "🔇"}
         </button>
       </div>
+      )}
 
       <PitchRadar
         zone={folded.zone}
@@ -242,6 +277,7 @@ export function ReplayPlayer({
             p2={timeline.meta.p2}
             called={called}
             live={demoLive}
+            minuteLabel={`${minute}'`}
           />
           <PredictionPanel
             fixtureId={timeline.meta.fixtureId}

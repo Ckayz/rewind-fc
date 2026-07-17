@@ -14,11 +14,16 @@ function Bar({
   color: string;
 }) {
   return (
-    <div className="flex items-center gap-2">
-      <span className="w-28 truncate text-xs font-semibold uppercase tracking-wide text-pitch-100">
-        {label}
-      </span>
-      <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-pitch-800">
+    <div>
+      <div className="mb-1 flex items-baseline justify-between">
+        <span className="text-xs font-semibold uppercase tracking-wide text-pitch-100">
+          {label}
+        </span>
+        <span className="score-digits text-xl leading-none" style={{ color }}>
+          {Math.round(pct * 100)}%
+        </span>
+      </div>
+      <div className="h-2.5 overflow-hidden rounded-full bg-pitch-800">
         <motion.div
           animate={{ width: `${Math.round(pct * 100)}%` }}
           transition={{ type: "spring", stiffness: 60, damping: 18 }}
@@ -26,9 +31,6 @@ function Bar({
           style={{ background: color, boxShadow: `0 0 10px ${color}66` }}
         />
       </div>
-      <span className="score-digits w-11 text-right text-lg" style={{ color }}>
-        {Math.round(pct * 100)}%
-      </span>
     </div>
   );
 }
@@ -39,21 +41,28 @@ export function ForecastPanel({
   p2,
   live,
   called,
+  minuteLabel,
 }: {
   forecast: Forecast | null;
   p1: string;
   p2: string;
   live?: boolean;
   called?: { team: string; pct: number } | null;
+  minuteLabel?: string;
 }) {
   return (
     <div className="glass rounded-xl p-4">
-      <h3 className="mb-3 flex items-center justify-between font-display text-lg font-semibold uppercase tracking-widest text-pitch-300">
+      <h3 className="mb-1 flex items-center justify-between font-display text-lg font-semibold uppercase tracking-widest text-pitch-300">
         ⚡ Next 5 minutes
-        <span className="text-[10px] normal-case tracking-normal text-pitch-500">
-          momentum model · TxLINE data
-        </span>
+        {minuteLabel && (
+          <span className="score-digits text-xl text-volt volt-glow">
+            {minuteLabel}
+          </span>
+        )}
       </h3>
+      <p className="mb-3 text-[10px] uppercase tracking-widest text-pitch-500">
+        Who scores next? · momentum model on live TxLINE data
+      </p>
 
       {!forecast ? (
         <p className="py-4 text-center text-xs text-pitch-400">
@@ -61,8 +70,8 @@ export function ForecastPanel({
         </p>
       ) : (
         <div className="space-y-2.5">
-          <Bar label={`${flag(p1)} ${p1} goal`} pct={forecast.p1Goal} color="#c6ff00" />
-          <Bar label={`${flag(p2)} ${p2} goal`} pct={forecast.p2Goal} color="#E0703F" />
+          <Bar label={`${flag(p1)} ${p1}`} pct={forecast.p1Goal} color="#c6ff00" />
+          <Bar label={`${flag(p2)} ${p2}`} pct={forecast.p2Goal} color="#E0703F" />
           <div className="flex gap-2 pt-1">
             <span className="rounded-full border border-pitch-700 px-2.5 py-1 text-[11px] text-pitch-100">
               🚩 corner {Math.round(forecast.anyCorner * 100)}%
