@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Scoreboard } from "@/components/Scoreboard";
 import { PitchRadar } from "@/components/PitchRadar";
 import type { BallZone } from "@/lib/replay/timeline";
+import type { LineupSide } from "@/db/schema";
 import { flag } from "@/lib/flags";
 
 interface LiveState {
@@ -15,6 +16,7 @@ interface LiveState {
   odds: { home?: number; draw?: number; away?: number } | null;
   events: { action?: string; seq?: number; minute: number | null }[];
   zone: BallZone | null;
+  lineups: { p1: LineupSide; p2: LineupSide } | null;
 }
 
 const ICON: Record<string, string> = {
@@ -97,6 +99,7 @@ export function LivePanel({
         p2={p2}
         tMs={state?.clockSeconds ? state.clockSeconds * 1000 : 0}
         live
+        lineups={state?.lineups ?? undefined}
       />
       <div className="flex items-center justify-end gap-1.5 text-[10px] font-semibold uppercase tracking-widest">
         <span

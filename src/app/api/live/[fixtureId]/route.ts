@@ -19,6 +19,39 @@ interface ScoreRec {
   Data?: Record<string, unknown>;
   Participant?: number;
   PossessionType?: string;
+  Participant1Id?: number;
+  Lineups?: {
+    normativeId: number;
+    preferredName: string;
+    lineups: {
+      rosterNumber: string;
+      starter: boolean;
+      positionId: number;
+      player: { normativeId: number; preferredName: string };
+    }[];
+  }[];
+}
+
+function packLineups(recs: ScoreRec[]) {
+  const lu = [...recs]
+    .sort((a, b) => (b.Seq ?? 0) - (a.Seq ?? 0))
+    .find((r) => r.Action === "lineups" && r.Lineups?.length);
+  if (!lu?.Lineups) return null;
+  const p1Id = lu.Participant1Id;
+  const pack = (t: NonNullable<ScoreRec["Lineups"]>[number]) => ({
+    team: t.preferredName,
+    players: t.lineups.map((p) => ({
+      id: p.player.normativeId,
+      name: p.player.preferredName.split(", ").reverse().join(" "),
+      num: p.rosterNumber,
+      starter: p.starter,
+      pos: p.positionId,
+    })),
+  });
+  const sides = Object.fromEntries(
+    lu.Lineups.map((t) => [t.normativeId === p1Id ? "p1" : "p2", pack(t)])
+  );
+  return sides.p1 && sides.p2 ? sides : null;
 }
 
 const ZONE: Record<string, string> = {
@@ -113,6 +146,7 @@ export async function GET(
             ? { team: zr.Participant === 1 ? "p1" : "p2", z: ZONE[zr.PossessionType!] }
             : null;
         })(),
+        lineups: packLineups(recs),
         liveOddsUpdates: liveOddsCount,
         fetchedAt: Date.now(),
       },

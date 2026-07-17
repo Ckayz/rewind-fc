@@ -2,7 +2,74 @@
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { BallZone, MatchEvent } from "@/lib/replay/timeline";
+import type { LineupSide } from "@/db/schema";
 import { flag } from "@/lib/flags";
+
+/** Formation x-anchors per row (percent of pitch length), p1 left→right. */
+const ROW_X = [7, 19, 33, 44]; // GK, DEF, MID, FWD
+const POS_ROW: Record<number, number> = { 34: 0, 35: 1, 36: 2, 37: 3 };
+
+function PlayerDots({
+  side,
+  mirror,
+  ballX,
+  color,
+}: {
+  side: LineupSide;
+  mirror: boolean; // p2 → mirrored to the right half
+  ballX: number;
+  color: string;
+}) {
+  const reduced = useReducedMotion();
+  const starters = side.players.filter((p) => p.starter);
+  const rows: (typeof starters)[] = [[], [], [], []];
+  for (const p of starters) rows[POS_ROW[p.pos ?? 36] ?? 2].push(p);
+
+  const teamCenter = mirror ? 75 : 25;
+  // whole block leans toward the ball a touch — schematic, alive, honest
+  const lean = Math.max(-5, Math.min(5, (ballX - teamCenter) * 0.12));
+
+  return (
+    <>
+      {rows.map((row, ri) =>
+        row.map((p, pi) => {
+          const baseX = mirror ? 100 - ROW_X[ri] : ROW_X[ri];
+          const x = baseX + lean;
+          const y = ((pi + 1) / (row.length + 1)) * 88 + 6;
+          return (
+            <motion.div
+              key={p.id}
+              animate={{ left: `${x}%`, top: `${y}%` }}
+              transition={
+                reduced
+                  ? { duration: 0 }
+                  : { type: "spring", stiffness: 26, damping: 15 }
+              }
+              className="group absolute z-[5] -translate-x-1/2 -translate-y-1/2"
+              title={p.name}
+            >
+              <span
+                className="score-digits flex h-5 w-5 items-center justify-center rounded-full border text-[9px] leading-none sm:h-6 sm:w-6 sm:text-[10px]"
+                style={{
+                  borderColor: color,
+                  color,
+                  background: "rgba(10,15,11,0.75)",
+                }}
+              >
+                {p.num}
+              </span>
+              <span
+                className="pointer-events-none absolute left-1/2 top-full mt-0.5 -translate-x-1/2 whitespace-nowrap rounded bg-pitch-950/90 px-1 text-[9px] text-pitch-100 opacity-0 transition-opacity group-hover:opacity-100"
+              >
+                {p.name}
+              </span>
+            </motion.div>
+          );
+        })
+      )}
+    </>
+  );
+}
 
 /** Zone → ball x-position (% of pitch length), p1 attacks left→right. */
 const ZONE_X: Record<BallZone["z"], number> = {
@@ -59,6 +126,7 @@ export function PitchRadar({
   p2,
   tMs,
   live,
+  lineups,
 }: {
   zone: BallZone | null;
   lastEvent: MatchEvent | null; // only pass events within the last few seconds
@@ -66,6 +134,7 @@ export function PitchRadar({
   p2: string;
   tMs: number; // clock for wobble (virtual or wall)
   live?: boolean;
+  lineups?: { p1: LineupSide; p2: LineupSide };
 }) {
   const reduced = useReducedMotion();
   const pos = ballPos(zone, tMs);
@@ -80,7 +149,12 @@ export function PitchRadar({
           <span
             className={`h-1.5 w-1.5 rounded-full ${live ? "bg-live animate-live-pulse" : "bg-volt"}`}
           />
-          {live ? "Live" : "Replay"} · ball zone radar
+          {live ? "Live" : "Replay"} · zone radar
+          {lineups && (
+            <span className="hidden text-pitch-500 sm:inline">
+              · formations schematic
+            </span>
+          )}
         </span>
         <AnimatePresence mode="wait">
           {possessing && zone && (
@@ -132,6 +206,24 @@ export function PitchRadar({
             <path d="M 5 57 A 4 4 0 0 1 1 53" />
           </g>
         </svg>
+
+        {/* player dots — real lineups, schematic formation positions */}
+        {lineups && (
+          <>
+            <PlayerDots
+              side={lineups.p1}
+              mirror={false}
+              ballX={pos.x}
+              color="#c6ff00"
+            />
+            <PlayerDots
+              side={lineups.p2}
+              mirror={true}
+              ballX={pos.x}
+              color="#E0703F"
+            />
+          </>
+        )}
 
         {/* team labels */}
         <span className="absolute left-2 top-1.5 text-[10px] font-semibold uppercase tracking-widest text-pitch-400">

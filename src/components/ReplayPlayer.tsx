@@ -137,6 +137,7 @@ export function ReplayPlayer({ timeline }: { timeline: CompiledTimeline }) {
         p1={timeline.meta.p1}
         p2={timeline.meta.p2}
         tMs={clock.virtualMs}
+        lineups={timeline.meta.lineups}
       />
 
       <div className="grid gap-5 lg:grid-cols-[1.2fr_1fr]">
