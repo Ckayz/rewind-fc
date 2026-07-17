@@ -83,8 +83,4 @@ pnpm dev
 - Group-stage replays are unavailable — TxLINE's historical retention had already expired for June matches when we ingested (July 17). All knockout matches are in.
 - Replay-mode picks can theoretically be "cheated" by someone who knows the result — that's why live picks score **×3**. It's a fan game, not a market.
 
-## Team
 
-Arvin ([@Predictefy](https://predictefy.com)) + Claude (Anthropic) as AI pair-programmer.
-
-MIT
