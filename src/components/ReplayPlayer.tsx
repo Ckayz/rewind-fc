@@ -11,6 +11,8 @@ import { OddsChart } from "@/components/OddsChart";
 import { PredictionPanel } from "@/components/PredictionPanel";
 import { PitchLineup } from "@/components/PitchLineup";
 import { PitchRadar } from "@/components/PitchRadar";
+import { ForecastPanel } from "@/components/ForecastPanel";
+import { computeForecast, windowStats, type Forecast } from "@/lib/forecast";
 
 const SPEEDS = [
   { label: "×30", value: 30 },
@@ -28,6 +30,22 @@ export function ReplayPlayer({ timeline }: { timeline: CompiledTimeline }) {
   const minute = Math.floor(clock.virtualMs / 60_000);
   const second = Math.floor((clock.virtualMs % 60_000) / 1000);
 
+  // rolling "next 5 minutes" forecast, recomputed every 15 virtual seconds
+  const forecastTick = Math.floor(clock.virtualMs / 15_000);
+  const forecast: Forecast | null = useMemo(() => {
+    if (clock.virtualMs < 60_000) return null;
+    return computeForecast(windowStats(timeline.items, clock.virtualMs));
+  }, [timeline.items, forecastTick]); // eslint-disable-line react-hooks/exhaustive-deps
+  const forecastLog = useRef<{ t: number; f: Forecast }[]>([]);
+  useEffect(() => {
+    if (forecast) {
+      forecastLog.current.push({ t: clock.virtualMs, f: forecast });
+      if (forecastLog.current.length > 60) forecastLog.current.shift();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [forecast]);
+  const [called, setCalled] = useState<{ team: string; pct: number } | null>(null);
+
   // GOAL moment: flash + banner whenever the folded score total increases
   const reduced = useReducedMotion();
   const [goalFlash, setGoalFlash] = useState<string | null>(null);
@@ -37,11 +55,26 @@ export function ReplayPlayer({ timeline }: { timeline: CompiledTimeline }) {
     if (totalGoals > prevGoals.current && clock.playing) {
       const latest = folded.events.find((e) => e.type === "goal");
       setGoalFlash(latest?.text ?? "GOAL");
+      // score the model: forecast snapshot from inside the 5-min window pre-goal
+      const goalT = latest?.offsetMs ?? clock.virtualMs;
+      const snap = [...forecastLog.current]
+        .reverse()
+        .find((s) => s.t <= goalT - 10_000 && s.t >= goalT - 5 * 60_000);
+      if (snap && latest?.team) {
+        const pct = latest.team === "p1" ? snap.f.p1Goal : snap.f.p2Goal;
+        if (pct >= 0.18) {
+          const teamName =
+            latest.team === "p1" ? timeline.meta.p1 : timeline.meta.p2;
+          setCalled({ team: teamName, pct });
+          setTimeout(() => setCalled(null), 6_000);
+        }
+      }
       const t = setTimeout(() => setGoalFlash(null), 2200);
       prevGoals.current = totalGoals;
       return () => clearTimeout(t);
     }
     prevGoals.current = totalGoals;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [totalGoals, clock.playing, folded.events]);
 
   return (
@@ -149,6 +182,12 @@ export function ReplayPlayer({ timeline }: { timeline: CompiledTimeline }) {
               awayName={timeline.meta.p2}
             />
           )}
+          <ForecastPanel
+            forecast={forecast}
+            p1={timeline.meta.p1}
+            p2={timeline.meta.p2}
+            called={called}
+          />
           <PredictionPanel
             fixtureId={timeline.meta.fixtureId}
             p1={timeline.meta.p1}

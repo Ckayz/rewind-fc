@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { Scoreboard } from "@/components/Scoreboard";
 import { PitchRadar } from "@/components/PitchRadar";
+import { ForecastPanel } from "@/components/ForecastPanel";
+import type { Forecast } from "@/lib/forecast";
 import type { BallZone } from "@/lib/replay/timeline";
 import type { LineupSide } from "@/db/schema";
 import { flag } from "@/lib/flags";
@@ -17,6 +19,7 @@ interface LiveState {
   events: { action?: string; seq?: number; minute: number | null }[];
   zone: BallZone | null;
   lineups: { p1: LineupSide; p2: LineupSide } | null;
+  forecast: Forecast | null;
 }
 
 const ICON: Record<string, string> = {
@@ -132,6 +135,12 @@ export function LivePanel({
           </span>
         </div>
       )}
+      <ForecastPanel
+        forecast={state?.forecast ?? null}
+        p1={p1}
+        p2={p2}
+        live
+      />
       {state && state.events.length > 0 && (
         <div className="glass rounded-xl p-4">
           <h3 className="mb-2 font-display text-lg font-semibold uppercase tracking-widest text-pitch-300">

@@ -5,6 +5,40 @@ import {
   getScoresSnapshot,
   getScoresUpdatesLive,
 } from "@/lib/txline";
+import { computeForecast, type ForecastInput } from "@/lib/forecast";
+
+const ZONE_W: Record<string, number> = {
+  SafePossession: 0.3, Possession: 0.3, AttackPossession: 1,
+  DangerPossession: 2, HighDangerPossession: 3.5,
+};
+
+/** trailing 10-min momentum stats from raw live records */
+function liveForecast(recs: {
+  Ts?: number; Action?: string; Participant?: number;
+  PossessionType?: string; StatusId?: number;
+  Data?: Record<string, unknown>;
+}[]) {
+  const inPlay = recs.filter((r) => (r.StatusId ?? 0) >= 2 && (r.StatusId ?? 0) <= 12);
+  if (inPlay.length < 10) return null;
+  const maxTs = Math.max(...inPlay.map((r) => r.Ts ?? 0));
+  const from = maxTs - 10 * 60_000;
+  const win = inPlay.filter((r) => (r.Ts ?? 0) >= from);
+  const input: ForecastInput = {
+    pressureP1: 0, pressureP2: 0, shotsP1: 0, shotsP2: 0, corners: 0, cards: 0,
+  };
+  for (const r of win) {
+    if (r.PossessionType && ZONE_W[r.PossessionType]) {
+      if (r.Participant === 1) input.pressureP1 += ZONE_W[r.PossessionType];
+      else if (r.Participant === 2) input.pressureP2 += ZONE_W[r.PossessionType];
+    }
+    if (r.Action === "shot") {
+      if (r.Participant === 2) input.shotsP2++;
+      else input.shotsP1++;
+    } else if (r.Action === "corner") input.corners++;
+    else if (r.Action === "yellow_card" || r.Action === "red_card") input.cards++;
+  }
+  return computeForecast(input);
+}
 
 const PHASE: Record<number, string> = {
   1: "Pre-match", 2: "First half", 3: "Half-time", 4: "Second half", 5: "Full-time",
@@ -147,6 +181,7 @@ export async function GET(
             : null;
         })(),
         lineups: packLineups(recs),
+        forecast: liveForecast(recs),
         liveOddsUpdates: liveOddsCount,
         fetchedAt: Date.now(),
       },

@@ -11,88 +11,14 @@ import type { BallZone, MatchEvent } from "@/lib/replay/timeline";
 import type { LineupSide } from "@/db/schema";
 import { flag } from "@/lib/flags";
 
-/** deterministic per-player phase from id — no Math.random, SSR-safe */
-const phase = (id: number, k: number) => ((id * 2654435761) % (628 * k)) / 100;
+/* ---------- deterministic helpers (no Math.random — SSR/replay safe) ---------- */
 
-/** continuous wander offset around an anchor, amplitude by row */
-function wander(id: number, wt: number, amp: number): { dx: number; dy: number } {
-  return {
-    dx:
-      Math.sin(wt / 3100 + phase(id, 1)) * amp +
-      Math.sin(wt / 1300 + phase(id, 2)) * amp * 0.4,
-    dy:
-      Math.cos(wt / 2700 + phase(id, 3)) * amp * 1.4 +
-      Math.sin(wt / 1100 + phase(id, 4)) * amp * 0.5,
-  };
-}
+const hash01 = (n: number) => {
+  const s = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+  return s - Math.floor(s);
+};
 
-/** Formation x-anchors per row (percent of pitch length), p1 left→right. */
-const ROW_X = [7, 19, 33, 44]; // GK, DEF, MID, FWD
-const POS_ROW: Record<number, number> = { 34: 0, 35: 1, 36: 2, 37: 3 };
-
-function PlayerDots({
-  side,
-  mirror,
-  ballX,
-  color,
-  wt,
-}: {
-  side: LineupSide;
-  mirror: boolean; // p2 → mirrored to the right half
-  ballX: number;
-  color: string;
-  wt: number; // continuous wander clock (real ms)
-}) {
-  const reduced = useReducedMotion();
-  const starters = side.players.filter((p) => p.starter);
-  const rows: (typeof starters)[] = [[], [], [], []];
-  for (const p of starters) rows[POS_ROW[p.pos ?? 36] ?? 2].push(p);
-
-  const teamCenter = mirror ? 75 : 25;
-  // whole block leans toward the ball a touch — schematic, alive, honest
-  const lean = Math.max(-5, Math.min(5, (ballX - teamCenter) * 0.12));
-  // rows jog with different intensity: GK barely, forwards most
-  const AMP = [0.5, 1.4, 2.2, 2.8];
-
-  return (
-    <>
-      {rows.map((row, ri) =>
-        row.map((p, pi) => {
-          const baseX = mirror ? 100 - ROW_X[ri] : ROW_X[ri];
-          const w = reduced ? { dx: 0, dy: 0 } : wander(p.id, wt, AMP[ri]);
-          const x = baseX + lean + w.dx;
-          const y = ((pi + 1) / (row.length + 1)) * 88 + 6 + w.dy;
-          return (
-            <div
-              key={p.id}
-              style={{ left: `${x}%`, top: `${y}%` }}
-              className="group absolute z-[5] -translate-x-1/2 -translate-y-1/2"
-              title={p.name}
-            >
-              <span
-                className="score-digits flex h-5 w-5 items-center justify-center rounded-full border text-[9px] leading-none sm:h-6 sm:w-6 sm:text-[10px]"
-                style={{
-                  borderColor: color,
-                  color,
-                  background: "rgba(10,15,11,0.75)",
-                }}
-              >
-                {p.num}
-              </span>
-              <span
-                className="pointer-events-none absolute left-1/2 top-full mt-0.5 -translate-x-1/2 whitespace-nowrap rounded bg-pitch-950/90 px-1 text-[9px] text-pitch-100 opacity-0 transition-opacity group-hover:opacity-100"
-              >
-                {p.name}
-              </span>
-            </div>
-          );
-        })
-      )}
-    </>
-  );
-}
-
-/** Zone → ball x-position (% of pitch length), p1 attacks left→right. */
+/** Zone → ball x-anchor (% of pitch length), p1 attacks left→right. */
 const ZONE_X: Record<BallZone["z"], number> = {
   safe: 32,
   attack: 56,
@@ -107,41 +33,194 @@ const ZONE_COPY: Record<BallZone["z"], string> = {
   box: "danger in the box!",
 };
 
-function ballPos(zone: BallZone | null, wt: number): { x: number; y: number } {
-  if (!zone) return { x: 50, y: 50 };
-  const raw = ZONE_X[zone.z];
-  // continuous life: the ball works the channel, drifting around its zone
-  const x =
-    (zone.team === "p1" ? raw : 100 - raw) +
-    Math.sin(wt / 1900) * 4 +
-    Math.sin(wt / 700) * 1.5;
-  const y = 50 + Math.sin(wt / 2600) * 18 + Math.sin(wt / 830) * 6;
-  return { x, y };
+const ROW_X = [7, 19, 33, 45]; // GK, DEF, MID, FWD anchors
+const POS_ROW: Record<number, number> = { 34: 0, 35: 1, 36: 2, 37: 3 };
+// how strongly each row tracks the ball vertically / joins attacks
+const ROW_Y_TRACK = [0.12, 0.3, 0.5, 0.68];
+const ROW_PUSH = [0, 4, 7, 9];
+
+interface Vec {
+  x: number;
+  y: number;
 }
+
+interface SimPlayer extends Vec {
+  id: number;
+  num: string;
+  name: string;
+  team: "p1" | "p2";
+  row: number;
+  slotY: number; // formation y anchor
+}
+
+interface Sim {
+  ball: Vec;
+  ballTrail: Vec;
+  ballTarget: Vec;
+  nextPassAt: number;
+  passSeed: number;
+  players: SimPlayer[];
+  targets: Map<number, Vec>;
+  lastRetarget: number;
+  zoneKey: string;
+  eventKey: string;
+}
+
+function initPlayers(lineups: { p1: LineupSide; p2: LineupSide }): SimPlayer[] {
+  const out: SimPlayer[] = [];
+  for (const side of ["p1", "p2"] as const) {
+    const starters = lineups[side].players.filter((p) => p.starter);
+    const rows: (typeof starters)[] = [[], [], [], []];
+    for (const p of starters) rows[POS_ROW[p.pos ?? 36] ?? 2].push(p);
+    rows.forEach((row, ri) =>
+      row.forEach((p, pi) => {
+        const slotY = ((pi + 1) / (row.length + 1)) * 84 + 8;
+        const x = side === "p1" ? ROW_X[ri] : 100 - ROW_X[ri];
+        out.push({ id: p.id, num: p.num, name: p.name, team: side, row: ri, slotY, x, y: slotY });
+      })
+    );
+  }
+  return out;
+}
+
+function eventBallSpot(e: MatchEvent, zone: BallZone | null): Vec | null {
+  const side = e.team === "p1" ? 1 : e.team === "p2" ? -1 : zone?.team === "p1" ? 1 : -1;
+  const ax = (v: number) => (side === 1 ? v : 100 - v);
+  switch (e.type) {
+    case "goal": return { x: ax(97), y: 50 };
+    case "shot": return { x: ax(84), y: 38 + hash01(e.offsetMs) * 24 };
+    case "penalty": return { x: ax(89), y: 50 };
+    case "corner": return { x: ax(99), y: hash01(e.offsetMs) > 0.5 ? 3 : 97 };
+    default: return null;
+  }
+}
+
+/** advance sim: passing-waypoint ball + role-based player targets */
+function tick(sim: Sim, dt: number, wt: number, zone: BallZone | null, lastEvent: MatchEvent | null) {
+  const zoneKey = zone ? `${zone.team}:${zone.z}` : "none";
+  const eventKey = lastEvent ? `${lastEvent.offsetMs}:${lastEvent.type}` : "";
+
+  // --- ball waypoints ---
+  const retargetBall = () => {
+    if (!zone) {
+      sim.ballTarget = { x: 50, y: 50 };
+      return;
+    }
+    sim.passSeed++;
+    const bandX = zone.team === "p1" ? ZONE_X[zone.z] : 100 - ZONE_X[zone.z];
+    const h1 = hash01(sim.passSeed * 7.13);
+    const h2 = hash01(sim.passSeed * 3.77);
+    sim.ballTarget = {
+      x: Math.max(3, Math.min(97, bandX + (h1 - 0.5) * 16)),
+      y: 14 + h2 * 72,
+    };
+    sim.nextPassAt = wt + 900 + hash01(sim.passSeed * 1.31) * 1700;
+  };
+
+  if (eventKey && eventKey !== sim.eventKey && lastEvent) {
+    const spot = eventBallSpot(lastEvent, zone);
+    sim.eventKey = eventKey;
+    if (spot) {
+      sim.ballTarget = spot;
+      sim.nextPassAt = wt + 1400;
+    }
+  } else if (zoneKey !== sim.zoneKey) {
+    sim.zoneKey = zoneKey;
+    retargetBall(); // turnover / zone change = immediate long ball
+  } else if (wt >= sim.nextPassAt) {
+    retargetBall();
+  }
+
+  // ball moves fast toward target (pass), decelerating on arrival
+  const bk = 1 - Math.exp(-dt * 4.2);
+  sim.ball.x += (sim.ballTarget.x - sim.ball.x) * bk;
+  sim.ball.y += (sim.ballTarget.y - sim.ball.y) * bk;
+  const tk = 1 - Math.exp(-dt * 2.2);
+  sim.ballTrail.x += (sim.ball.x - sim.ballTrail.x) * tk;
+  sim.ballTrail.y += (sim.ball.y - sim.ballTrail.y) * tk;
+
+  // --- player targets at ~2Hz ---
+  if (wt - sim.lastRetarget > 480) {
+    sim.lastRetarget = wt;
+    const possessing = zone?.team;
+
+    // nearest two teammates support, nearest opponent presses
+    let support: number[] = [];
+    let presser = -1;
+    if (possessing) {
+      const mates = sim.players
+        .filter((p) => p.team === possessing && p.row > 0)
+        .sort(
+          (a, b) =>
+            Math.hypot(a.x - sim.ball.x, a.y - sim.ball.y) -
+            Math.hypot(b.x - sim.ball.x, b.y - sim.ball.y)
+        );
+      support = mates.slice(0, 2).map((p) => p.id);
+      const opps = sim.players
+        .filter((p) => p.team !== possessing && p.row > 0)
+        .sort(
+          (a, b) =>
+            Math.hypot(a.x - sim.ball.x, a.y - sim.ball.y) -
+            Math.hypot(b.x - sim.ball.x, b.y - sim.ball.y)
+        );
+      presser = opps[0]?.id ?? -1;
+    }
+
+    for (const p of sim.players) {
+      const attackDir = p.team === "p1" ? 1 : -1;
+      const hasBall = possessing === p.team;
+      // line push / drop
+      const push = (hasBall ? ROW_PUSH[p.row] : -ROW_PUSH[p.row] * 0.55) * attackDir;
+      const baseX = (p.team === "p1" ? ROW_X[p.row] : 100 - ROW_X[p.row]) + push;
+      // vertical ball tracking, discipline by row
+      const y = p.slotY + (sim.ball.y - p.slotY) * ROW_Y_TRACK[p.row] * (hasBall ? 1 : 0.8);
+      let target: Vec = { x: baseX, y };
+
+      if (p.id === support[0]) {
+        target = { x: sim.ball.x - 7 * attackDir, y: Math.min(92, sim.ball.y + 8) };
+      } else if (p.id === support[1]) {
+        target = { x: sim.ball.x - 4 * attackDir, y: Math.max(8, sim.ball.y - 10) };
+      } else if (p.id === presser) {
+        target = { x: sim.ball.x + 2.5 * attackDir, y: sim.ball.y + 2 };
+      }
+      // micro-jitter so nobody stands statue-still
+      target.x += (hash01(p.id + Math.floor(wt / 1600)) - 0.5) * 2.4;
+      target.y += (hash01(p.id * 3 + Math.floor(wt / 1400)) - 0.5) * 3.2;
+      target.x = Math.max(2, Math.min(98, target.x));
+      target.y = Math.max(4, Math.min(96, target.y));
+      sim.targets.set(p.id, target);
+    }
+  }
+
+  // integrate players toward targets (sprint-ish approach)
+  const pk = 1 - Math.exp(-dt * 1.9);
+  for (const p of sim.players) {
+    const t = sim.targets.get(p.id);
+    if (!t) continue;
+    p.x += (t.x - p.x) * pk;
+    p.y += (t.y - p.y) * pk;
+  }
+}
+
+/* ---------- event ping overlay (unchanged visual language) ---------- */
 
 function eventPing(e: MatchEvent | null, zone: BallZone | null) {
   if (!e) return null;
   const side = e.team === "p1" ? 1 : e.team === "p2" ? -1 : zone?.team === "p1" ? 1 : -1;
   const atkX = (v: number) => (side === 1 ? v : 100 - v);
   switch (e.type) {
-    case "goal":
-      return { x: atkX(97), y: 50, label: "GOAL!", big: true, color: "#c6ff00" };
-    case "shot":
-      return { x: atkX(86), y: 42, label: "SHOT", big: false, color: "#c6ff00" };
-    case "penalty":
-      return { x: atkX(89), y: 50, label: "PENALTY", big: true, color: "#ffc940" };
-    case "corner":
-      return { x: atkX(99), y: 4, label: "CORNER", big: false, color: "#4795d9" };
-    case "yellow":
-      return { x: 50, y: 20, label: "🟨", big: false, color: "#ffc940" };
-    case "red":
-      return { x: 50, y: 20, label: "🟥", big: false, color: "#ff3b30" };
-    case "var":
-      return { x: 50, y: 80, label: "VAR", big: false, color: "#e8f0e6" };
-    default:
-      return null;
+    case "goal": return { x: atkX(97), y: 50, label: "GOAL!", big: true, color: "#c6ff00" };
+    case "shot": return { x: atkX(86), y: 42, label: "SHOT", big: false, color: "#c6ff00" };
+    case "penalty": return { x: atkX(89), y: 50, label: "PENALTY", big: true, color: "#ffc940" };
+    case "corner": return { x: atkX(99), y: 4, label: "CORNER", big: false, color: "#4795d9" };
+    case "yellow": return { x: 50, y: 20, label: "🟨", big: false, color: "#ffc940" };
+    case "red": return { x: 50, y: 20, label: "🟥", big: false, color: "#ff3b30" };
+    case "var": return { x: 50, y: 80, label: "VAR", big: false, color: "#e8f0e6" };
+    default: return null;
   }
 }
+
+/* ---------- component ---------- */
 
 export function PitchRadar({
   zone,
@@ -153,30 +232,59 @@ export function PitchRadar({
   lineups,
 }: {
   zone: BallZone | null;
-  lastEvent: MatchEvent | null; // only pass events within the last few seconds
+  lastEvent: MatchEvent | null;
   p1: string;
   p2: string;
-  tMs: number; // clock for wobble (virtual or wall)
+  tMs: number;
   live?: boolean;
   lineups?: { p1: LineupSide; p2: LineupSide };
 }) {
   const reduced = useReducedMotion();
-  // internal wander clock — keeps everything moving even between data ticks
-  const [wt, setWt] = useState(0);
+  const simRef = useRef<Sim | null>(null);
+  const [, force] = useState(0);
+  const propsRef = useRef({ zone, lastEvent });
+  propsRef.current = { zone, lastEvent };
   const wtRef = useRef(0);
+
+  if (!simRef.current) {
+    simRef.current = {
+      ball: { x: 50, y: 50 },
+      ballTrail: { x: 50, y: 50 },
+      ballTarget: { x: 50, y: 50 },
+      nextPassAt: 0,
+      passSeed: 1,
+      players: lineups ? initPlayers(lineups) : [],
+      targets: new Map(),
+      lastRetarget: 0,
+      zoneKey: "init",
+      eventKey: "",
+    };
+  }
+  // late lineups (live announcements) — hydrate players once available
+  if (lineups && simRef.current.players.length === 0) {
+    simRef.current.players = initPlayers(lineups);
+  }
+
   useAnimationFrame((_, delta) => {
     if (reduced) return;
     wtRef.current += delta;
-    setWt(wtRef.current);
+    tick(
+      simRef.current!,
+      Math.min(delta, 64) / 1000,
+      wtRef.current,
+      propsRef.current.zone,
+      propsRef.current.lastEvent
+    );
+    force((n) => (n + 1) % 1_000_000);
   });
-  const pos = ballPos(zone, reduced ? 0 : wt);
+
+  const sim = simRef.current;
   const ping = eventPing(lastEvent, zone);
   const possessing = zone ? (zone.team === "p1" ? p1 : p2) : null;
-  void tMs; // zone/event timing handled by parents; motion runs on wt
+  void tMs;
 
   return (
     <div className="glass overflow-hidden rounded-xl">
-      {/* status strip */}
       <div className="flex items-center justify-between px-4 py-2 text-[11px] font-semibold uppercase tracking-widest">
         <span className="flex items-center gap-2 text-pitch-300">
           <span
@@ -188,7 +296,7 @@ export function PitchRadar({
               href="/lab"
               className="hidden text-pitch-500 underline-offset-2 hover:text-volt hover:underline sm:inline"
             >
-              · formations schematic — see real tracking in the Lab
+              · simulated from zone data — real tracking in the Lab
             </a>
           )}
         </span>
@@ -208,7 +316,6 @@ export function PitchRadar({
       </div>
 
       <div className="relative aspect-[105/58] w-full bg-gradient-to-b from-pitch-800 to-pitch-850">
-        {/* mowing stripes */}
         <div
           className="absolute inset-0 opacity-[0.05]"
           style={{
@@ -216,7 +323,6 @@ export function PitchRadar({
               "repeating-linear-gradient(90deg, #c6ff00 0 10%, transparent 10% 20%)",
           }}
         />
-        {/* possession tint */}
         <motion.div
           animate={{
             opacity: zone ? 0.1 : 0,
@@ -226,7 +332,6 @@ export function PitchRadar({
           className="absolute top-0 h-full w-1/2 bg-volt"
         />
 
-        {/* markings */}
         <svg viewBox="0 0 105 58" className="absolute inset-0 h-full w-full">
           <g stroke="#7a8a7c" strokeOpacity="0.35" strokeWidth="0.35" fill="none">
             <rect x="1" y="1" width="103" height="56" />
@@ -243,27 +348,30 @@ export function PitchRadar({
           </g>
         </svg>
 
-        {/* player dots — real lineups, schematic formation positions */}
-        {lineups && (
-          <>
-            <PlayerDots
-              side={lineups.p1}
-              mirror={false}
-              ballX={pos.x}
-              color="#c6ff00"
-              wt={wt}
-            />
-            <PlayerDots
-              side={lineups.p2}
-              mirror={true}
-              ballX={pos.x}
-              color="#E0703F"
-              wt={wt}
-            />
-          </>
-        )}
+        {/* players — engine-driven */}
+        {sim.players.map((p) => (
+          <div
+            key={p.id}
+            style={{ left: `${p.x}%`, top: `${p.y}%` }}
+            className="group absolute z-[5] -translate-x-1/2 -translate-y-1/2"
+            title={p.name}
+          >
+            <span
+              className="score-digits flex h-5 w-5 items-center justify-center rounded-full border text-[9px] leading-none sm:h-6 sm:w-6 sm:text-[10px]"
+              style={{
+                borderColor: p.team === "p1" ? "#c6ff00" : "#E0703F",
+                color: p.team === "p1" ? "#c6ff00" : "#E0703F",
+                background: "rgba(10,15,11,0.75)",
+              }}
+            >
+              {p.num}
+            </span>
+            <span className="pointer-events-none absolute left-1/2 top-full mt-0.5 -translate-x-1/2 whitespace-nowrap rounded bg-pitch-950/90 px-1 text-[9px] text-pitch-100 opacity-0 transition-opacity group-hover:opacity-100">
+              {p.name}
+            </span>
+          </div>
+        ))}
 
-        {/* team labels */}
         <span className="absolute left-2 top-1.5 text-[10px] font-semibold uppercase tracking-widest text-pitch-400">
           {flag(p1)} {p1} →
         </span>
@@ -271,31 +379,20 @@ export function PitchRadar({
           ← {p2} {flag(p2)}
         </span>
 
-        {/* ball + trail */}
-        <motion.div
-          animate={{ left: `${pos.x}%`, top: `${pos.y}%` }}
-          transition={
-            reduced
-              ? { duration: 0 }
-              : { type: "spring", stiffness: 38, damping: 16, mass: 1.1 }
-          }
+        {/* ball trail + ball */}
+        <div
+          style={{ left: `${sim.ballTrail.x}%`, top: `${sim.ballTrail.y}%` }}
+          className="absolute z-[9] h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-volt/25"
+        />
+        <div
+          style={{ left: `${sim.ball.x}%`, top: `${sim.ball.y}%` }}
           className="absolute z-10 -translate-x-1/2 -translate-y-1/2"
         >
           <span className="relative block h-3.5 w-3.5 rounded-full bg-volt shadow-[0_0_14px_rgba(198,255,0,0.9)]">
             <span className="absolute inset-0 animate-ping rounded-full bg-volt/50" />
           </span>
-        </motion.div>
-        <motion.div
-          animate={{ left: `${pos.x}%`, top: `${pos.y}%` }}
-          transition={
-            reduced
-              ? { duration: 0 }
-              : { type: "spring", stiffness: 20, damping: 14, mass: 1.4 }
-          }
-          className="absolute z-[9] h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-volt/30"
-        />
+        </div>
 
-        {/* event ping */}
         <AnimatePresence>
           {ping && (
             <motion.div
@@ -324,7 +421,6 @@ export function PitchRadar({
           )}
         </AnimatePresence>
 
-        {/* idle state */}
         {!zone && (
           <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[11px] font-semibold uppercase tracking-widest text-pitch-400">
             {live ? "waiting for kickoff" : "press play"}
