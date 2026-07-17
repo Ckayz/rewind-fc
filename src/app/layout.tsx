@@ -4,6 +4,7 @@ import Link from "next/link";
 import { WalletProviders } from "@/components/WalletProviders";
 import { WalletButton } from "@/components/WalletButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { MoreMenu } from "@/components/MoreMenu";
 import "./globals.css";
 
 const barlow = Barlow_Condensed({
@@ -55,46 +56,17 @@ export default function RootLayout({
                 FC
               </span>
             </Link>
-            <div className="ml-auto flex items-center gap-3 text-sm font-semibold text-pitch-300 sm:gap-4">
-              <Link
-                href="/demo"
-                className="text-live/80 hover:text-live transition-colors"
-              >
-                Demo
-              </Link>
-              <Link
-                href="/final"
-                className="text-gold hover:text-accent transition-colors"
-              >
-                Final
-              </Link>
-              <Link href="/bracket" className="hover:text-accent transition-colors">
-                Bracket
+            <div className="ml-auto flex items-center gap-4 text-sm font-semibold text-pitch-300 sm:gap-5">
+              <Link href="/" className="hover:text-accent transition-colors">
+                Home
               </Link>
               <Link href="/matches" className="hover:text-accent transition-colors">
-                Matches
-              </Link>
-              <Link
-                href="/leaderboard"
-                className="hover:text-accent transition-colors"
-              >
-                Leaders
-              </Link>
-              <Link href="/pulse" className="hover:text-accent transition-colors">
-                Pulse
-              </Link>
-              <Link href="/lab" className="hover:text-accent transition-colors">
-                Lab
+                Markets
               </Link>
               <Link href="/desk" className="hover:text-accent transition-colors">
-                Desk
+                Rewards
               </Link>
-              <Link
-                href="/proofs"
-                className="text-verify/80 hover:text-verify transition-colors"
-              >
-                Proofs
-              </Link>
+              <MoreMenu />
               <ThemeToggle />
               <WalletButton />
             </div>

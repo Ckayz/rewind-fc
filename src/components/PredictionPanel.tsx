@@ -95,21 +95,21 @@ export function PredictionPanel({
 
   return (
     <div className="glass rounded-xl p-4">
-      <h3 className="mb-3 flex items-center justify-between font-display text-lg font-semibold uppercase tracking-widest text-pitch-300">
-        Predict
+      <h3 className="mb-3 flex items-center justify-between text-sm font-semibold text-pitch-300">
+        Markets
         {mode === "live" && (
-          <span className="rounded bg-live/20 px-2 py-0.5 text-xs text-live">
-            ×3 points live
+          <span className="rounded-full bg-live/15 px-2.5 py-0.5 text-xs font-semibold text-live">
+            ×3 live
           </span>
         )}
       </h3>
 
       {allowWinner && !has("winner") && (
-        <div className="mb-4">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-pitch-400">
-            Match winner{winnerLocked ? " — locked (kickoff passed)" : ""}
+        <div className="mb-3">
+          <p className="mb-1.5 text-xs text-pitch-400">
+            Match winner{winnerLocked ? " · locked" : ""}
           </p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-1.5">
             {(
               [
                 ["P1", `${flag(p1)} ${p1}`],
@@ -121,7 +121,7 @@ export function PredictionPanel({
                 key={code}
                 disabled={busy || winnerLocked}
                 onClick={() => place("winner", { pick: code })}
-                className="rounded-lg border border-pitch-700 px-2 py-2 font-display text-sm font-semibold uppercase text-pitch-100 transition-colors hover:border-volt hover:text-volt disabled:opacity-40"
+                className="rounded-lg bg-pitch-800 px-2 py-3 text-sm font-semibold text-pitch-100 transition-colors hover:bg-accent/15 hover:text-accent disabled:opacity-40"
               >
                 {label}
               </button>
@@ -132,23 +132,21 @@ export function PredictionPanel({
 
       {!has("hilo:corners") && (
         <div className="mb-2">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-pitch-400">
-            Total corners — line 9.5
-          </p>
-          <div className="grid grid-cols-2 gap-2">
+          <p className="mb-1.5 text-xs text-pitch-400">Total corners · 9.5</p>
+          <div className="grid grid-cols-2 gap-1.5">
             <button
               disabled={busy}
               onClick={() => place("hilo", { stat: "corners", line: 9.5, side: "over" })}
-              className="rounded-lg border border-pitch-700 px-2 py-2 font-display text-sm font-semibold uppercase text-pitch-100 hover:border-volt hover:text-volt disabled:opacity-40"
+              className="rounded-lg bg-success/10 px-2 py-3 text-sm font-semibold text-success transition-colors hover:bg-success/20 disabled:opacity-40"
             >
-              Over ▲
+              Over ↑
             </button>
             <button
               disabled={busy}
               onClick={() => place("hilo", { stat: "corners", line: 9.5, side: "under" })}
-              className="rounded-lg border border-pitch-700 px-2 py-2 font-display text-sm font-semibold uppercase text-pitch-100 hover:border-volt hover:text-volt disabled:opacity-40"
+              className="rounded-lg bg-danger/10 px-2 py-3 text-sm font-semibold text-danger transition-colors hover:bg-danger/20 disabled:opacity-40"
             >
-              Under ▼
+              Under ↓
             </button>
           </div>
         </div>

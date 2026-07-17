@@ -103,7 +103,7 @@ export function OddsChart({
               iconType="plainline"
             />
             <Line
-              type="stepAfter"
+              type="monotone"
               dataKey="home"
               name={homeName}
               stroke={ODDS_COLORS.home}
@@ -113,7 +113,7 @@ export function OddsChart({
               connectNulls
             />
             <Line
-              type="stepAfter"
+              type="monotone"
               dataKey="draw"
               name="Draw"
               stroke={ODDS_COLORS.draw}
@@ -123,7 +123,7 @@ export function OddsChart({
               connectNulls
             />
             <Line
-              type="stepAfter"
+              type="monotone"
               dataKey="away"
               name={awayName}
               stroke={ODDS_COLORS.away}

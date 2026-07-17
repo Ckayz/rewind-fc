@@ -18,6 +18,7 @@ export interface ForecastInput {
 export interface Forecast {
   p1Goal: number; // P(goal by p1 in next 5 min) 0..1
   p2Goal: number;
+  noGoal: number; // P(no goal at all in the window) = e^-(λ1+λ2)
   anyCorner: number;
   anyCard: number;
   momentum: number; // -1 (all p2) .. +1 (all p1)
@@ -31,11 +32,14 @@ export function computeForecast(i: ForecastInput): Forecast {
   const share1 = total > 0 ? i.pressureP1 / total : 0.5;
   const lam = (share: number, shots: number) =>
     Math.min(0.9, 0.14 * (0.4 + 1.6 * share) * (1 + 0.25 * shots));
+  const lam1 = lam(share1, i.shotsP1);
+  const lam2 = lam(1 - share1, i.shotsP2);
   const cornerLam = 0.5 + 0.1 * i.corners + 0.3 * Math.abs(share1 - 0.5) * 2;
   const cardLam = 0.22 + 0.09 * i.cards;
   return {
-    p1Goal: 1 - Math.exp(-lam(share1, i.shotsP1)),
-    p2Goal: 1 - Math.exp(-lam(1 - share1, i.shotsP2)),
+    p1Goal: 1 - Math.exp(-lam1),
+    p2Goal: 1 - Math.exp(-lam2),
+    noGoal: Math.exp(-(lam1 + lam2)),
     anyCorner: 1 - Math.exp(-cornerLam),
     anyCard: 1 - Math.exp(-cardLam),
     momentum: share1 * 2 - 1,

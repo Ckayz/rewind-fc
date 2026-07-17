@@ -119,6 +119,7 @@ export function ForecastPanel({
         <div className="space-y-2.5">
           <Bar label={`${flag(p1)} ${p1}`} pct={forecast.p1Goal} color="#c6ff00" />
           <Bar label={`${flag(p2)} ${p2}`} pct={forecast.p2Goal} color="#E0703F" />
+          <Bar label="No goal" pct={forecast.noGoal} color="#8A94A6" />
           <div className="flex gap-2 pt-1">
             <span className="rounded-full border border-pitch-700 px-2.5 py-1 text-[11px] text-pitch-100">
               🚩 corner {Math.round(forecast.anyCorner * 100)}%
