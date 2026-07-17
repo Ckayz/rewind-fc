@@ -65,6 +65,7 @@ interface Sim {
   zoneKey: string;
   eventKey: string;
   pingUntil: number; // wt deadline after which the event ping hides
+  fastIds: Set<number>; // active runners (support + presser) sprint
 }
 
 function initPlayers(lineups: { p1: LineupSide; p2: LineupSide }): SimPlayer[] {
@@ -142,7 +143,7 @@ function tick(sim: Sim, dt: number, wt: number, zone: BallZone | null, lastEvent
   sim.ballTrail.y += (sim.ball.y - sim.ballTrail.y) * tk;
 
   // --- player targets at ~2Hz ---
-  if (wt - sim.lastRetarget > 480) {
+  if (wt - sim.lastRetarget > 360) {
     sim.lastRetarget = wt;
     const possessing = zone?.team;
 
@@ -167,6 +168,7 @@ function tick(sim: Sim, dt: number, wt: number, zone: BallZone | null, lastEvent
         );
       presser = opps[0]?.id ?? -1;
     }
+    sim.fastIds = new Set([...support, presser]);
 
     for (const p of sim.players) {
       const attackDir = p.team === "p1" ? 1 : -1;
@@ -194,11 +196,13 @@ function tick(sim: Sim, dt: number, wt: number, zone: BallZone | null, lastEvent
     }
   }
 
-  // integrate players toward targets (sprint-ish approach)
-  const pk = 1 - Math.exp(-dt * 1.9);
+  // integrate players toward targets — active runners sprint near ball speed
+  const pkBase = 1 - Math.exp(-dt * 2.9);
+  const pkFast = 1 - Math.exp(-dt * 4.0);
   for (const p of sim.players) {
     const t = sim.targets.get(p.id);
     if (!t) continue;
+    const pk = sim.fastIds.has(p.id) ? pkFast : pkBase;
     p.x += (t.x - p.x) * pk;
     p.y += (t.y - p.y) * pk;
   }
@@ -263,6 +267,7 @@ export function PitchRadar({
       zoneKey: "init",
       eventKey: "",
       pingUntil: 0,
+      fastIds: new Set(),
     };
   }
   // late lineups (live announcements) — hydrate players once available

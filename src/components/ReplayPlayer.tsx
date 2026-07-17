@@ -58,14 +58,23 @@ export function ReplayPlayer({ timeline }: { timeline: CompiledTimeline }) {
   useEffect(() => setSound(soundEnabled()), []);
   const [confettiKey, setConfettiKey] = useState(0);
 
+  // refs so the goal effect depends ONLY on the goal count — a dep on
+  // folded.events (new array every frame) cancelled the hide-timer instantly
+  const eventsRef = useRef(folded.events);
+  eventsRef.current = folded.events;
+  const playingRef = useRef(clock.playing);
+  playingRef.current = clock.playing;
+  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (flashTimer.current) clearTimeout(flashTimer.current); }, []);
+
   useEffect(() => {
-    if (totalGoals > prevGoals.current && clock.playing) {
-      const latest = folded.events.find((e) => e.type === "goal");
+    if (totalGoals > prevGoals.current && playingRef.current) {
+      const latest = eventsRef.current.find((e) => e.type === "goal");
       setGoalFlash(latest?.text ?? "GOAL");
       goalHorn();
       setConfettiKey((k) => k + 1);
       // score the model: forecast snapshot from inside the 5-min window pre-goal
-      const goalT = latest?.offsetMs ?? clock.virtualMs;
+      const goalT = latest?.offsetMs ?? 0;
       const snap = [...forecastLog.current]
         .reverse()
         .find((s) => s.t <= goalT - 10_000 && s.t >= goalT - 5 * 60_000);
@@ -78,13 +87,12 @@ export function ReplayPlayer({ timeline }: { timeline: CompiledTimeline }) {
           setTimeout(() => setCalled(null), 6_000);
         }
       }
-      const t = setTimeout(() => setGoalFlash(null), 2200);
-      prevGoals.current = totalGoals;
-      return () => clearTimeout(t);
+      if (flashTimer.current) clearTimeout(flashTimer.current);
+      flashTimer.current = setTimeout(() => setGoalFlash(null), 2400);
     }
     prevGoals.current = totalGoals;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [totalGoals, clock.playing, folded.events]);
+  }, [totalGoals]);
 
   const pundit =
     folded.events[0] &&
