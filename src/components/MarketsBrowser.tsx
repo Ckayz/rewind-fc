@@ -20,7 +20,10 @@ export interface MarketFixture {
 type Filter =
   | "all"
   | "live"
+  | "1min"
   | "5min"
+  | "10min"
+  | "15min"
   | "upcoming"
   | "final"
   | "sf"
@@ -30,7 +33,10 @@ type Filter =
 const FILTERS: { key: Filter; label: string; icon: string }[] = [
   { key: "all", label: "All", icon: "▦" },
   { key: "live", label: "Live", icon: "🔴" },
+  { key: "1min", label: "1 Min", icon: "⏱" },
   { key: "5min", label: "5 Min", icon: "⚡" },
+  { key: "10min", label: "10 Min", icon: "🕙" },
+  { key: "15min", label: "15 Min", icon: "🕒" },
   { key: "upcoming", label: "Upcoming", icon: "🕑" },
   { key: "final", label: "Final", icon: "🏆" },
   { key: "sf", label: "Semifinals", icon: "🥈" },
@@ -43,6 +49,10 @@ function matches(f: MarketFixture, filter: Filter): boolean {
     case "all": return true;
     case "live": return f.status === "live";
     case "5min": return f.hasTimeline || f.status !== "finished"; // 5-min forecast markets exist on replays + live
+    case "1min":
+    case "10min":
+    case "15min":
+      return false; // durations launching with venue integration
     case "upcoming": return f.status === "scheduled";
     default: return f.stage === filter;
   }
@@ -157,7 +167,9 @@ export function MarketsBrowser({ fixtures }: { fixtures: MarketFixture[] }) {
       <div className="min-w-0 flex-1">
         {shown.length === 0 ? (
           <p className="glass rounded-xl py-12 text-center text-sm text-pitch-400">
-            No markets in this view right now.
+            {["1min", "10min", "15min"].includes(filter)
+              ? "This market duration launches with venue integration — 5 Min is live today."
+              : "No markets in this view right now."}
           </p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">

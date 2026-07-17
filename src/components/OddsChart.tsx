@@ -36,15 +36,20 @@ export function OddsChart({
   homeName,
   awayName,
   cursorMin,
+  liveHead = false,
 }: {
   data: OddsPoint[];
   homeName: string;
   awayName: string;
   cursorMin?: number; // replay cursor — only show points up to this minute
+  /** pin the line head at 50% width — right half is empty future */
+  liveHead?: boolean;
 }) {
-  const visible = (
-    cursorMin === undefined ? data : data.filter((d) => d.tMin <= cursorMin)
-  ).map((d) => ({
+  const source =
+    cursorMin === undefined ? data : data.filter((d) => d.tMin <= cursorMin);
+  const headT = source.at(-1)?.tMin ?? 0;
+  const xMax = liveHead ? Math.max(10, headT * 2) : undefined;
+  const visible = source.map((d) => ({
     ...d,
     home: clamp(d.home),
     draw: clamp(d.draw),
@@ -74,7 +79,8 @@ export function OddsChart({
             <XAxis
               dataKey="tMin"
               type="number"
-              domain={[0, "dataMax"]}
+              domain={[0, xMax ?? "dataMax"]}
+              allowDataOverflow
               tick={{ fill: "#7a8a7c", fontSize: 11 }}
               tickFormatter={(v) => `${v}'`}
               stroke="#2c3d2f"

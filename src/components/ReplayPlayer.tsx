@@ -288,6 +288,7 @@ export function ReplayPlayer({
               data={folded.odds}
               homeName={timeline.meta.p1}
               awayName={timeline.meta.p2}
+              liveHead={clock.playing || demoLive}
             />
           )}
           {view === "lineups" && timeline.meta.lineups && (
