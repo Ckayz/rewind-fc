@@ -232,6 +232,7 @@ export function PitchRadar({
   tMs,
   live,
   lineups,
+  paused = false,
 }: {
   zone: BallZone | null;
   lastEvent: MatchEvent | null;
@@ -240,12 +241,13 @@ export function PitchRadar({
   tMs: number;
   live?: boolean;
   lineups?: { p1: LineupSide; p2: LineupSide };
+  paused?: boolean;
 }) {
   const reduced = useReducedMotion();
   const simRef = useRef<Sim | null>(null);
   const [, force] = useState(0);
-  const propsRef = useRef({ zone, lastEvent });
-  propsRef.current = { zone, lastEvent };
+  const propsRef = useRef({ zone, lastEvent, paused });
+  propsRef.current = { zone, lastEvent, paused };
   const wtRef = useRef(0);
 
   if (!simRef.current) {
@@ -270,14 +272,17 @@ export function PitchRadar({
 
   useAnimationFrame((_, delta) => {
     if (reduced) return;
-    wtRef.current += delta;
-    tick(
-      simRef.current!,
-      Math.min(delta, 64) / 1000,
-      wtRef.current,
-      propsRef.current.zone,
-      propsRef.current.lastEvent
-    );
+    wtRef.current += delta; // keeps ping fade running
+    // paused replay = frozen match: no ball passes, no player runs
+    if (!propsRef.current.paused) {
+      tick(
+        simRef.current!,
+        Math.min(delta, 64) / 1000,
+        wtRef.current,
+        propsRef.current.zone,
+        propsRef.current.lastEvent
+      );
+    }
     force((n) => (n + 1) % 1_000_000);
   });
 
